@@ -1169,7 +1169,7 @@ class OneCGateway extends Controller{
 						where product_id = " . $product['id'] . ";"
 					);
 
-					$this->model_catalog_product->cache->delete("product");
+					$this->cache->delete("product");
 					$option_exchange = $this->model_extension_module_exchange_1c->getProductOptionValueExchange($product['id']);
 					$this->_saveProductOptions($product['id'], (array)$product['options'], $option_exchange);
 				}
