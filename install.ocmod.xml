@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <modification>
     <name>Метеор-ИТ: УИМ 1С</name>
-    <version>1.3.0</version>
+    <version>1.3.3</version>
     <author>itcraft.ru</author>
     <link>http://uim.meteor-it.ru/</link>
 	<code><![CDATA[UIM 1C]]></code>
