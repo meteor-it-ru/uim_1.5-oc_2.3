@@ -1732,9 +1732,13 @@ class OneCGateway extends Controller{
 	public function log($data, $title = null, $filename = "main.log") {
 		if ($this->enable_logs) {
 		//if ($this->config->get('uim_debug')) {
-			//$this->log->write('PayPal Express debug (' . $title . '): ' . json_encode($data));
-			file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . 'Logs' . DIRECTORY_SEPARATOR . $filename, date('Y-m-d G:i:s') . ' - ' . $title . "\r\n", FILE_APPEND);
-			file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . 'Logs' . DIRECTORY_SEPARATOR . $filename, print_r($data, true) . "\r\n\r\n", FILE_APPEND);
+			//$this->log->write('Express debug (' . $title . '): ' . json_encode($data));
+			file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . 'Logs' . DIRECTORY_SEPARATOR . $filename,
+					 "[" . date('Y-m-d G:i:s') . "]" . ' - ' . $title . "\r\n",
+					 FILE_APPEND);
+			file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . 'Logs' . DIRECTORY_SEPARATOR . $filename,
+					 print_r($data, true) . "\r\n\r\n",
+					 FILE_APPEND);
 		}
 	}
 }
