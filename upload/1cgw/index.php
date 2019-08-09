@@ -1,4 +1,9 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors','on');
+ini_set('error_log', __DIR__ . '/Logs/error.log');
+
 ini_set('soap.wsdl_cache_enabled', '0');
 ini_set('soap.wsdl_cache_ttl', '0');
 
@@ -8,18 +13,18 @@ require_once 'OneC/Wsdl/Client.php';
 
 class OneCGateway extends Controller{
 
-	private $enable_logs = 1;
+	private $enable_logs = 0;
 	private $image_dir = 'catalog/export/';
 
-	public $category_ids = array();
-	public $product_ids = array();
-	public $product_option_ids = array();
+	public  $category_ids = array();
+	public  $product_ids = array();
+	public  $product_option_ids = array();
 
 	private $_model = null;
 	private $setting = array();
 	private $template_tags = array('[category_name]', '[all_category_name]', '[manufacturer_name]', '[product_name]', '[model_name]', '[price]');
 	private $all_category_sep = '|';
-
+	private $language_default = 'ru-ru';
 
 
 	public function __construct() {
@@ -28,189 +33,190 @@ class OneCGateway extends Controller{
 		$this->setting = $this->_loadSetting();
 	}
 
-	  /**
-   * @return array
-   */
-  private function _loadSetting() {
+	/**
+	 * @return array
+	 */
+	private function _loadSetting() {
+
   	$this->load->model('setting/setting');
 	$setting = $this->model_setting_setting->getSetting('exchange_1c', 0);
 	$result = array();
 
 	// category
-	$result['cat']['url']['load'] 					= isset($setting['exchange_1c_load_url_cat']) ? (int)$setting['exchange_1c_load_url_cat'] : 1;
-	$result['cat']['url']['rewrite'] 				= isset($setting['exchange_1c_rewrite_url_cat']) ? (int)$setting['exchange_1c_rewrite_url_cat'] : 1;
-	$result['cat']['url']['generate'] 				= isset($setting['exchange_1c_generate_url_cat']) ? (int)$setting['exchange_1c_generate_url_cat'] : 0;
-	$result['cat']['url']['template'] 				= isset($setting['exchange_1c_template_url_cat']) ? (string)$setting['exchange_1c_template_url_cat'] : '[category_name]';
+	$result['cat']['url']['load'] 				= isset($setting['exchange_1c_load_url_cat']) ? (int)$setting['exchange_1c_load_url_cat'] : 1;
+	$result['cat']['url']['rewrite'] 			= isset($setting['exchange_1c_rewrite_url_cat']) ? (int)$setting['exchange_1c_rewrite_url_cat'] : 1;
+	$result['cat']['url']['generate'] 			= isset($setting['exchange_1c_generate_url_cat']) ? (int)$setting['exchange_1c_generate_url_cat'] : 0;
+	$result['cat']['url']['template'] 			= isset($setting['exchange_1c_template_url_cat']) ? (string)$setting['exchange_1c_template_url_cat'] : '[category_name]';
 	$result['cat']['url']['all_category_sep']		= isset($setting['exchange_1c_all_category_sep_url_cat']) ? (string)$setting['exchange_1c_all_category_sep_url_cat'] : ' ';
-	$result['cat']['url']['clear'] 					= isset($setting['exchange_1c_clear_url_cat']) ? (string)$setting['exchange_1c_clear_url_cat'] : '';
-	$result['cat']['url']['replace']				= isset($setting['exchange_1c_replace_url_cat']) ? (string)$setting['exchange_1c_replace_url_cat'] : '';
+	$result['cat']['url']['clear'] 				= isset($setting['exchange_1c_clear_url_cat']) ? (string)$setting['exchange_1c_clear_url_cat'] : '';
+	$result['cat']['url']['replace']			= isset($setting['exchange_1c_replace_url_cat']) ? (string)$setting['exchange_1c_replace_url_cat'] : '';
 	$result['cat']['url']['transliterate'] 			= isset($setting['exchange_1c_transliterate_url_cat']) ? (int)$setting['exchange_1c_transliterate_url_cat'] : 1;
 	$result['cat']['url']['transliterate_type']		= isset($setting['exchange_1c_transliterate_type_url_cat']) ? (int)$setting['exchange_1c_transliterate_type_url_cat'] : 1;
 
-	$result['cat']['h1']['load'] 					= isset($setting['exchange_1c_load_h1_cat']) ? (int)$setting['exchange_1c_load_h1_cat'] : 1;
-	$result['cat']['h1']['rewrite'] 				= isset($setting['exchange_1c_rewrite_h1_cat']) ? (int)$setting['exchange_1c_rewrite_h1_cat'] : 1;
-	$result['cat']['h1']['generate'] 				= isset($setting['exchange_1c_generate_h1_cat']) ? (int)$setting['exchange_1c_generate_h1_cat'] : 0;
-	$result['cat']['h1']['template'] 				= isset($setting['exchange_1c_template_h1_cat']) ? (string)$setting['exchange_1c_template_h1_cat'] : '[category_name]';
+	$result['cat']['h1']['load'] 				= isset($setting['exchange_1c_load_h1_cat']) ? (int)$setting['exchange_1c_load_h1_cat'] : 1;
+	$result['cat']['h1']['rewrite'] 			= isset($setting['exchange_1c_rewrite_h1_cat']) ? (int)$setting['exchange_1c_rewrite_h1_cat'] : 1;
+	$result['cat']['h1']['generate'] 			= isset($setting['exchange_1c_generate_h1_cat']) ? (int)$setting['exchange_1c_generate_h1_cat'] : 0;
+	$result['cat']['h1']['template'] 			= isset($setting['exchange_1c_template_h1_cat']) ? (string)$setting['exchange_1c_template_h1_cat'] : '[category_name]';
 	$result['cat']['h1']['all_category_sep']		= isset($setting['exchange_1c_all_category_sep_h1_cat']) ? (string)$setting['exchange_1c_all_category_sep_h1_cat'] : ' ';
-	$result['cat']['h1']['clear'] 					= isset($setting['exchange_1c_clear_h1_cat']) ? (string)$setting['exchange_1c_clear_h1_cat'] : '';
-	$result['cat']['h1']['replace']					= isset($setting['exchange_1c_replace_h1_cat']) ? (string)$setting['exchange_1c_replace_h1_cat'] : '';
+	$result['cat']['h1']['clear'] 				= isset($setting['exchange_1c_clear_h1_cat']) ? (string)$setting['exchange_1c_clear_h1_cat'] : '';
+	$result['cat']['h1']['replace']				= isset($setting['exchange_1c_replace_h1_cat']) ? (string)$setting['exchange_1c_replace_h1_cat'] : '';
 	$result['cat']['h1']['transliterate'] 			= isset($setting['exchange_1c_transliterate_h1_cat']) ? (int)$setting['exchange_1c_transliterate_h1_cat'] : 0;
 	$result['cat']['h1']['transliterate_type']		= isset($setting['exchange_1c_transliterate_type_h1_cat']) ? (int)$setting['exchange_1c_transliterate_type_h1_cat'] : 0;
 
-	$result['cat']['title']['load'] 				= isset($setting['exchange_1c_load_title_cat']) ? (int)$setting['exchange_1c_load_title_cat'] : 1;
-	$result['cat']['title']['rewrite'] 				= isset($setting['exchange_1c_rewrite_title_cat']) ? (int)$setting['exchange_1c_rewrite_title_cat'] : 1;
+	$result['cat']['title']['load'] 			= isset($setting['exchange_1c_load_title_cat']) ? (int)$setting['exchange_1c_load_title_cat'] : 1;
+	$result['cat']['title']['rewrite'] 			= isset($setting['exchange_1c_rewrite_title_cat']) ? (int)$setting['exchange_1c_rewrite_title_cat'] : 1;
 	$result['cat']['title']['generate'] 			= isset($setting['exchange_1c_generate_title_cat']) ? (int)$setting['exchange_1c_generate_title_cat'] : 0;
 	$result['cat']['title']['template'] 			= isset($setting['exchange_1c_template_title_cat']) ? (string)$setting['exchange_1c_template_title_cat'] : '[category_name]';
 	$result['cat']['title']['all_category_sep']		= isset($setting['exchange_1c_all_category_sep_title_cat']) ? (string)$setting['exchange_1c_all_category_sep_title_cat'] : ' ';
-	$result['cat']['title']['clear'] 				= isset($setting['exchange_1c_clear_title_cat']) ? (string)$setting['exchange_1c_clear_title_cat'] : '';
-	$result['cat']['title']['replace']				= isset($setting['exchange_1c_replace_title_cat']) ? (string)$setting['exchange_1c_replace_title_cat'] : '';
+	$result['cat']['title']['clear'] 			= isset($setting['exchange_1c_clear_title_cat']) ? (string)$setting['exchange_1c_clear_title_cat'] : '';
+	$result['cat']['title']['replace']			= isset($setting['exchange_1c_replace_title_cat']) ? (string)$setting['exchange_1c_replace_title_cat'] : '';
 	$result['cat']['title']['transliterate'] 		= isset($setting['exchange_1c_transliterate_title_cat']) ? (int)$setting['exchange_1c_transliterate_title_cat'] : 0;
-	$result['cat']['title']['transliterate_type']	= isset($setting['exchange_1c_transliterate_type_title_cat']) ? (int)$setting['exchange_1c_transliterate_type_title_cat'] : 0;
+	$result['cat']['title']['transliterate_type']		= isset($setting['exchange_1c_transliterate_type_title_cat']) ? (int)$setting['exchange_1c_transliterate_type_title_cat'] : 0;
 
-	$result['cat']['mkey']['load'] 					= isset($setting['exchange_1c_load_mkey_cat']) ? (int)$setting['exchange_1c_load_mkey_cat'] : 1;
-	$result['cat']['mkey']['rewrite'] 				= isset($setting['exchange_1c_rewrite_mkey_cat']) ? (int)$setting['exchange_1c_rewrite_mkey_cat'] : 1;
-	$result['cat']['mkey']['generate'] 				= isset($setting['exchange_1c_generate_mkey_cat']) ? (int)$setting['exchange_1c_generate_mkey_cat'] : 0;
-	$result['cat']['mkey']['template'] 				= isset($setting['exchange_1c_template_mkey_cat']) ? (string)$setting['exchange_1c_template_mkey_cat'] : '';
+	$result['cat']['mkey']['load'] 				= isset($setting['exchange_1c_load_mkey_cat']) ? (int)$setting['exchange_1c_load_mkey_cat'] : 1;
+	$result['cat']['mkey']['rewrite'] 			= isset($setting['exchange_1c_rewrite_mkey_cat']) ? (int)$setting['exchange_1c_rewrite_mkey_cat'] : 1;
+	$result['cat']['mkey']['generate'] 			= isset($setting['exchange_1c_generate_mkey_cat']) ? (int)$setting['exchange_1c_generate_mkey_cat'] : 0;
+	$result['cat']['mkey']['template'] 			= isset($setting['exchange_1c_template_mkey_cat']) ? (string)$setting['exchange_1c_template_mkey_cat'] : '';
 	$result['cat']['mkey']['all_category_sep']		= isset($setting['exchange_1c_all_category_sep_mkey_cat']) ? (string)$setting['exchange_1c_all_category_sep_mkey_cat'] : ' ';
-	$result['cat']['mkey']['clear'] 				= isset($setting['exchange_1c_clear_mkey_cat']) ? (string)$setting['exchange_1c_clear_mkey_cat'] : '';
-	$result['cat']['mkey']['replace']				= isset($setting['exchange_1c_replace_mkey_cat']) ? (string)$setting['exchange_1c_replace_mkey_cat'] : '';
+	$result['cat']['mkey']['clear'] 			= isset($setting['exchange_1c_clear_mkey_cat']) ? (string)$setting['exchange_1c_clear_mkey_cat'] : '';
+	$result['cat']['mkey']['replace']			= isset($setting['exchange_1c_replace_mkey_cat']) ? (string)$setting['exchange_1c_replace_mkey_cat'] : '';
 	$result['cat']['mkey']['transliterate'] 		= isset($setting['exchange_1c_transliterate_mkey_cat']) ? (int)$setting['exchange_1c_transliterate_mkey_cat'] : 0;
-	$result['cat']['mkey']['transliterate_type']	= isset($setting['exchange_1c_transliterate_type_mkey_cat']) ? (int)$setting['exchange_1c_transliterate_type_mkey_cat'] : 0;
+	$result['cat']['mkey']['transliterate_type']		= isset($setting['exchange_1c_transliterate_type_mkey_cat']) ? (int)$setting['exchange_1c_transliterate_type_mkey_cat'] : 0;
 
-	$result['cat']['mdesc']['load'] 				= isset($setting['exchange_1c_load_mdesc_cat']) ? (int)$setting['exchange_1c_load_mdesc_cat'] : 1;
-	$result['cat']['mdesc']['rewrite'] 				= isset($setting['exchange_1c_rewrite_mdesc_cat']) ? (int)$setting['exchange_1c_rewrite_mdesc_cat'] : 1;
+	$result['cat']['mdesc']['load'] 			= isset($setting['exchange_1c_load_mdesc_cat']) ? (int)$setting['exchange_1c_load_mdesc_cat'] : 1;
+	$result['cat']['mdesc']['rewrite'] 			= isset($setting['exchange_1c_rewrite_mdesc_cat']) ? (int)$setting['exchange_1c_rewrite_mdesc_cat'] : 1;
 	$result['cat']['mdesc']['generate'] 			= isset($setting['exchange_1c_generate_mdesc_cat']) ? (int)$setting['exchange_1c_generate_mdesc_cat'] : 0;
 	$result['cat']['mdesc']['template'] 			= isset($setting['exchange_1c_template_mdesc_cat']) ? (string)$setting['exchange_1c_template_mdesc_cat'] : '';
 	$result['cat']['mdesc']['all_category_sep']		= isset($setting['exchange_1c_all_category_sep_mdesc_cat']) ? (string)$setting['exchange_1c_all_category_sep_mdesc_cat'] : ' ';
-	$result['cat']['mdesc']['clear'] 				= isset($setting['exchange_1c_clear_mdesc_cat']) ? (string)$setting['exchange_1c_clear_mdesc_cat'] : '';
-	$result['cat']['mdesc']['replace']				= isset($setting['exchange_1c_replace_mdesc_cat']) ? (string)$setting['exchange_1c_replace_mdesc_cat'] : '';
+	$result['cat']['mdesc']['clear'] 			= isset($setting['exchange_1c_clear_mdesc_cat']) ? (string)$setting['exchange_1c_clear_mdesc_cat'] : '';
+	$result['cat']['mdesc']['replace']			= isset($setting['exchange_1c_replace_mdesc_cat']) ? (string)$setting['exchange_1c_replace_mdesc_cat'] : '';
 	$result['cat']['mdesc']['transliterate'] 		= isset($setting['exchange_1c_transliterate_mdesc_cat']) ? (int)$setting['exchange_1c_transliterate_mdesc_cat'] : 0;
-	$result['cat']['mdesc']['transliterate_type']	= isset($setting['exchange_1c_transliterate_type_mdesc_cat']) ? (int)$setting['exchange_1c_transliterate_type_mdesc_cat'] : 0;
+	$result['cat']['mdesc']['transliterate_type']		= isset($setting['exchange_1c_transliterate_type_mdesc_cat']) ? (int)$setting['exchange_1c_transliterate_type_mdesc_cat'] : 0;
 
-	$result['cat']['desc']['load'] 					= isset($setting['exchange_1c_load_desc_cat']) ? (int)$setting['exchange_1c_load_desc_cat'] : 1;
-	$result['cat']['desc']['rewrite'] 				= isset($setting['exchange_1c_rewrite_desc_cat']) ? (int)$setting['exchange_1c_rewrite_desc_cat'] : 1;
-	$result['cat']['desc']['generate'] 				= isset($setting['exchange_1c_generate_desc_cat']) ? (int)$setting['exchange_1c_generate_desc_cat'] : 0;
-	$result['cat']['desc']['template'] 				= isset($setting['exchange_1c_template_desc_cat']) ? (string)$setting['exchange_1c_template_desc_cat'] : '';
+	$result['cat']['desc']['load'] 				= isset($setting['exchange_1c_load_desc_cat']) ? (int)$setting['exchange_1c_load_desc_cat'] : 1;
+	$result['cat']['desc']['rewrite'] 			= isset($setting['exchange_1c_rewrite_desc_cat']) ? (int)$setting['exchange_1c_rewrite_desc_cat'] : 1;
+	$result['cat']['desc']['generate'] 			= isset($setting['exchange_1c_generate_desc_cat']) ? (int)$setting['exchange_1c_generate_desc_cat'] : 0;
+	$result['cat']['desc']['template'] 			= isset($setting['exchange_1c_template_desc_cat']) ? (string)$setting['exchange_1c_template_desc_cat'] : '';
 	$result['cat']['desc']['all_category_sep']		= isset($setting['exchange_1c_all_category_sep_desc_cat']) ? (string)$setting['exchange_1c_all_category_sep_desc_cat'] : ' ';
-	$result['cat']['desc']['clear'] 				= isset($setting['exchange_1c_clear_desc_cat']) ? (string)$setting['exchange_1c_clear_desc_cat'] : '';
-	$result['cat']['desc']['replace']				= isset($setting['exchange_1c_replace_desc_cat']) ? (string)$setting['exchange_1c_replace_desc_cat'] : '';
+	$result['cat']['desc']['clear'] 			= isset($setting['exchange_1c_clear_desc_cat']) ? (string)$setting['exchange_1c_clear_desc_cat'] : '';
+	$result['cat']['desc']['replace']			= isset($setting['exchange_1c_replace_desc_cat']) ? (string)$setting['exchange_1c_replace_desc_cat'] : '';
 	$result['cat']['desc']['transliterate'] 		= isset($setting['exchange_1c_transliterate_desc_cat']) ? (int)$setting['exchange_1c_transliterate_desc_cat'] : 0;
-	$result['cat']['desc']['transliterate_type']	= isset($setting['exchange_1c_transliterate_type_desc_cat']) ? (int)$setting['exchange_1c_transliterate_type_desc_cat'] : 0;
+	$result['cat']['desc']['transliterate_type']		= isset($setting['exchange_1c_transliterate_type_desc_cat']) ? (int)$setting['exchange_1c_transliterate_type_desc_cat'] : 0;
 
 	// product
-	$result['prod']['url']['load'] 					= isset($setting['exchange_1c_load_url_prod']) ? (int)$setting['exchange_1c_load_url_prod'] : 1;
-	$result['prod']['url']['rewrite'] 				= isset($setting['exchange_1c_rewrite_url_prod']) ? (int)$setting['exchange_1c_rewrite_url_prod'] : 1;
-	$result['prod']['url']['generate'] 				= isset($setting['exchange_1c_generate_url_prod']) ? (int)$setting['exchange_1c_generate_url_prod'] : 0;
-	$result['prod']['url']['template'] 				= isset($setting['exchange_1c_template_url_prod']) ? (string)$setting['exchange_1c_template_url_prod'] : '[product_name]';
+	$result['prod']['url']['load'] 				= isset($setting['exchange_1c_load_url_prod']) ? (int)$setting['exchange_1c_load_url_prod'] : 1;
+	$result['prod']['url']['rewrite'] 			= isset($setting['exchange_1c_rewrite_url_prod']) ? (int)$setting['exchange_1c_rewrite_url_prod'] : 1;
+	$result['prod']['url']['generate'] 			= isset($setting['exchange_1c_generate_url_prod']) ? (int)$setting['exchange_1c_generate_url_prod'] : 0;
+	$result['prod']['url']['template'] 			= isset($setting['exchange_1c_template_url_prod']) ? (string)$setting['exchange_1c_template_url_prod'] : '[product_name]';
 	$result['prod']['url']['all_category_sep']		= isset($setting['exchange_1c_all_category_sep_url_prod']) ? (string)$setting['exchange_1c_all_category_sep_url_prod'] : ' ';
-	$result['prod']['url']['clear'] 				= isset($setting['exchange_1c_clear_url_prod']) ? (string)$setting['exchange_1c_clear_url_prod'] : '';
-	$result['prod']['url']['replace']				= isset($setting['exchange_1c_replace_url_prod']) ? (string)$setting['exchange_1c_replace_url_prod'] : '';
+	$result['prod']['url']['clear'] 			= isset($setting['exchange_1c_clear_url_prod']) ? (string)$setting['exchange_1c_clear_url_prod'] : '';
+	$result['prod']['url']['replace']			= isset($setting['exchange_1c_replace_url_prod']) ? (string)$setting['exchange_1c_replace_url_prod'] : '';
 	$result['prod']['url']['transliterate'] 		= isset($setting['exchange_1c_transliterate_url_prod']) ? (int)$setting['exchange_1c_transliterate_url_prod'] : 1;
-	$result['prod']['url']['transliterate_type']	= isset($setting['exchange_1c_transliterate_type_url_cat']) ? (int)$setting['exchange_1c_transliterate_type_url_prod'] : 1;
+	$result['prod']['url']['transliterate_type']		= isset($setting['exchange_1c_transliterate_type_url_cat']) ? (int)$setting['exchange_1c_transliterate_type_url_prod'] : 1;
 
-	$result['prod']['h1']['load'] 					= isset($setting['exchange_1c_load_h1_prod']) ? (int)$setting['exchange_1c_load_h1_prod'] : 1;
-	$result['prod']['h1']['rewrite'] 				= isset($setting['exchange_1c_rewrite_h1_prod']) ? (int)$setting['exchange_1c_rewrite_h1_prod'] : 1;
-	$result['prod']['h1']['generate'] 				= isset($setting['exchange_1c_generate_h1_prod']) ? (int)$setting['exchange_1c_generate_h1_prod'] : 0;
-	$result['prod']['h1']['template'] 				= isset($setting['exchange_1c_template_h1_prod']) ? (string)$setting['exchange_1c_template_h1_prod'] : '[product_name]';
+	$result['prod']['h1']['load'] 				= isset($setting['exchange_1c_load_h1_prod']) ? (int)$setting['exchange_1c_load_h1_prod'] : 1;
+	$result['prod']['h1']['rewrite'] 			= isset($setting['exchange_1c_rewrite_h1_prod']) ? (int)$setting['exchange_1c_rewrite_h1_prod'] : 1;
+	$result['prod']['h1']['generate'] 			= isset($setting['exchange_1c_generate_h1_prod']) ? (int)$setting['exchange_1c_generate_h1_prod'] : 0;
+	$result['prod']['h1']['template'] 			= isset($setting['exchange_1c_template_h1_prod']) ? (string)$setting['exchange_1c_template_h1_prod'] : '[product_name]';
 	$result['prod']['h1']['all_category_sep']		= isset($setting['exchange_1c_all_category_sep_h1_prod']) ? (string)$setting['exchange_1c_all_category_sep_h1_prod'] : ' ';
-	$result['prod']['h1']['clear'] 					= isset($setting['exchange_1c_clear_h1_prod']) ? (string)$setting['exchange_1c_clear_h1_prod'] : '';
-	$result['prod']['h1']['replace']				= isset($setting['exchange_1c_replace_h1_prod']) ? (string)$setting['exchange_1c_replace_h1_prod'] : '';
+	$result['prod']['h1']['clear'] 				= isset($setting['exchange_1c_clear_h1_prod']) ? (string)$setting['exchange_1c_clear_h1_prod'] : '';
+	$result['prod']['h1']['replace']			= isset($setting['exchange_1c_replace_h1_prod']) ? (string)$setting['exchange_1c_replace_h1_prod'] : '';
 	$result['prod']['h1']['transliterate'] 			= isset($setting['exchange_1c_transliterate_h1_prod']) ? (int)$setting['exchange_1c_transliterate_h1_prod'] : 0;
 	$result['prod']['h1']['transliterate_type']		= isset($setting['exchange_1c_transliterate_type_h1_cat']) ? (int)$setting['exchange_1c_transliterate_type_h1_prod'] : 0;
 
-	$result['prod']['title']['load'] 				= isset($setting['exchange_1c_load_title_prod']) ? (int)$setting['exchange_1c_load_title_prod'] : 1;
+	$result['prod']['title']['load'] 			= isset($setting['exchange_1c_load_title_prod']) ? (int)$setting['exchange_1c_load_title_prod'] : 1;
 	$result['prod']['title']['rewrite'] 			= isset($setting['exchange_1c_rewrite_title_prod']) ? (int)$setting['exchange_1c_rewrite_title_prod'] : 1;
 	$result['prod']['title']['generate'] 			= isset($setting['exchange_1c_generate_title_prod']) ? (int)$setting['exchange_1c_generate_title_prod'] : 0;
 	$result['prod']['title']['template'] 			= isset($setting['exchange_1c_template_title_prod']) ? (string)$setting['exchange_1c_template_title_prod'] : '[product_name]';
-	$result['prod']['title']['all_category_sep']	= isset($setting['exchange_1c_all_category_sep_title_prod']) ? (string)$setting['exchange_1c_all_category_sep_title_prod'] : ' ';
-	$result['prod']['title']['clear'] 				= isset($setting['exchange_1c_clear_title_prod']) ? (string)$setting['exchange_1c_clear_title_prod'] : '';
-	$result['prod']['title']['replace']				= isset($setting['exchange_1c_replace_title_prod']) ? (string)$setting['exchange_1c_replace_title_prod'] : '';
+	$result['prod']['title']['all_category_sep']		= isset($setting['exchange_1c_all_category_sep_title_prod']) ? (string)$setting['exchange_1c_all_category_sep_title_prod'] : ' ';
+	$result['prod']['title']['clear'] 			= isset($setting['exchange_1c_clear_title_prod']) ? (string)$setting['exchange_1c_clear_title_prod'] : '';
+	$result['prod']['title']['replace']			= isset($setting['exchange_1c_replace_title_prod']) ? (string)$setting['exchange_1c_replace_title_prod'] : '';
 	$result['prod']['title']['transliterate'] 		= isset($setting['exchange_1c_transliterate_title_prod']) ? (int)$setting['exchange_1c_transliterate_title_prod'] : 0;
-	$result['prod']['title']['transliterate_type']	= isset($setting['exchange_1c_transliterate_type_title_cat']) ? (int)$setting['exchange_1c_transliterate_type_title_prod'] : 0;
+	$result['prod']['title']['transliterate_type']		= isset($setting['exchange_1c_transliterate_type_title_cat']) ? (int)$setting['exchange_1c_transliterate_type_title_prod'] : 0;
 
-	$result['prod']['mkey']['load'] 				= isset($setting['exchange_1c_load_mkey_prod']) ? (int)$setting['exchange_1c_load_mkey_prod'] : 1;
-	$result['prod']['mkey']['rewrite'] 				= isset($setting['exchange_1c_rewrite_mkey_prod']) ? (int)$setting['exchange_1c_rewrite_mkey_prod'] : 1;
+	$result['prod']['mkey']['load'] 			= isset($setting['exchange_1c_load_mkey_prod']) ? (int)$setting['exchange_1c_load_mkey_prod'] : 1;
+	$result['prod']['mkey']['rewrite'] 			= isset($setting['exchange_1c_rewrite_mkey_prod']) ? (int)$setting['exchange_1c_rewrite_mkey_prod'] : 1;
 	$result['prod']['mkey']['generate'] 			= isset($setting['exchange_1c_generate_mkey_prod']) ? (int)$setting['exchange_1c_generate_mkey_prod'] : 0;
 	$result['prod']['mkey']['template'] 			= isset($setting['exchange_1c_template_mkey_prod']) ? (string)$setting['exchange_1c_template_mkey_prod'] : '';
 	$result['prod']['mkey']['all_category_sep']		= isset($setting['exchange_1c_all_category_sep_mkey_prod']) ? (string)$setting['exchange_1c_all_category_sep_mkey_prod'] : ' ';
-	$result['prod']['mkey']['clear'] 				= isset($setting['exchange_1c_clear_mkey_prod']) ? (string)$setting['exchange_1c_clear_mkey_prod'] : '';
-	$result['prod']['mkey']['replace']				= isset($setting['exchange_1c_replace_mkey_prod']) ? (string)$setting['exchange_1c_replace_mkey_prod'] : '';
+	$result['prod']['mkey']['clear'] 			= isset($setting['exchange_1c_clear_mkey_prod']) ? (string)$setting['exchange_1c_clear_mkey_prod'] : '';
+	$result['prod']['mkey']['replace']			= isset($setting['exchange_1c_replace_mkey_prod']) ? (string)$setting['exchange_1c_replace_mkey_prod'] : '';
 	$result['prod']['mkey']['transliterate'] 		= isset($setting['exchange_1c_transliterate_mkey_prod']) ? (int)$setting['exchange_1c_transliterate_mkey_prod'] : 0;
-	$result['prod']['mkey']['transliterate_type']	= isset($setting['exchange_1c_transliterate_type_mkey_cat']) ? (int)$setting['exchange_1c_transliterate_type_mkey_prod'] : 0;
+	$result['prod']['mkey']['transliterate_type']		= isset($setting['exchange_1c_transliterate_type_mkey_cat']) ? (int)$setting['exchange_1c_transliterate_type_mkey_prod'] : 0;
 
-	$result['prod']['mdesc']['load'] 				= isset($setting['exchange_1c_load_mdesc_prod']) ? (int)$setting['exchange_1c_load_mdesc_prod'] : 1;
+	$result['prod']['mdesc']['load'] 			= isset($setting['exchange_1c_load_mdesc_prod']) ? (int)$setting['exchange_1c_load_mdesc_prod'] : 1;
 	$result['prod']['mdesc']['rewrite'] 			= isset($setting['exchange_1c_rewrite_mdesc_prod']) ? (int)$setting['exchange_1c_rewrite_mdesc_prod'] : 1;
 	$result['prod']['mdesc']['generate'] 			= isset($setting['exchange_1c_generate_mdesc_prod']) ? (int)$setting['exchange_1c_generate_mdesc_prod'] : 0;
 	$result['prod']['mdesc']['template'] 			= isset($setting['exchange_1c_template_mdesc_prod']) ? (string)$setting['exchange_1c_template_mdesc_prod'] : '';
-	$result['prod']['mdesc']['all_category_sep']	= isset($setting['exchange_1c_all_category_sep_mdesc_prod']) ? (string)$setting['exchange_1c_all_category_sep_mdesc_prod'] : ' ';
-	$result['prod']['mdesc']['clear'] 				= isset($setting['exchange_1c_clear_mdesc_prod']) ? (string)$setting['exchange_1c_clear_mdesc_prod'] : '';
-	$result['prod']['mdesc']['replace']				= isset($setting['exchange_1c_replace_mdesc_prod']) ? (string)$setting['exchange_1c_replace_mdesc_prod'] : '';
+	$result['prod']['mdesc']['all_category_sep']		= isset($setting['exchange_1c_all_category_sep_mdesc_prod']) ? (string)$setting['exchange_1c_all_category_sep_mdesc_prod'] : ' ';
+	$result['prod']['mdesc']['clear'] 			= isset($setting['exchange_1c_clear_mdesc_prod']) ? (string)$setting['exchange_1c_clear_mdesc_prod'] : '';
+	$result['prod']['mdesc']['replace']			= isset($setting['exchange_1c_replace_mdesc_prod']) ? (string)$setting['exchange_1c_replace_mdesc_prod'] : '';
 	$result['prod']['mdesc']['transliterate'] 		= isset($setting['exchange_1c_transliterate_mdesc_prod']) ? (int)$setting['exchange_1c_transliterate_mdesc_prod'] : 0;
-	$result['prod']['mdesc']['transliterate_type']	= isset($setting['exchange_1c_transliterate_type_mdesc_cat']) ? (int)$setting['exchange_1c_transliterate_type_mdesc_prod'] : 0;
+	$result['prod']['mdesc']['transliterate_type']		= isset($setting['exchange_1c_transliterate_type_mdesc_cat']) ? (int)$setting['exchange_1c_transliterate_type_mdesc_prod'] : 0;
 
-	$result['prod']['desc']['load'] 				= isset($setting['exchange_1c_load_desc_prod']) ? (int)$setting['exchange_1c_load_desc_prod'] : 1;
-	$result['prod']['desc']['rewrite'] 				= isset($setting['exchange_1c_rewrite_desc_prod']) ? (int)$setting['exchange_1c_rewrite_desc_prod'] : 1;
+	$result['prod']['desc']['load'] 			= isset($setting['exchange_1c_load_desc_prod']) ? (int)$setting['exchange_1c_load_desc_prod'] : 1;
+	$result['prod']['desc']['rewrite'] 			= isset($setting['exchange_1c_rewrite_desc_prod']) ? (int)$setting['exchange_1c_rewrite_desc_prod'] : 1;
 	$result['prod']['desc']['generate'] 			= isset($setting['exchange_1c_generate_desc_prod']) ? (int)$setting['exchange_1c_generate_desc_prod'] : 0;
 	$result['prod']['desc']['template'] 			= isset($setting['exchange_1c_template_desc_prod']) ? (string)$setting['exchange_1c_template_desc_prod'] : '';
 	$result['prod']['desc']['all_category_sep']		= isset($setting['exchange_1c_all_category_sep_desc_prod']) ? (string)$setting['exchange_1c_all_category_sep_desc_prod'] : ' ';
-	$result['prod']['desc']['clear'] 				= isset($setting['exchange_1c_clear_desc_prod']) ? (string)$setting['exchange_1c_clear_desc_prod'] : '';
-	$result['prod']['desc']['replace']				= isset($setting['exchange_1c_replace_desc_prod']) ? (string)$setting['exchange_1c_replace_desc_prod'] : '';
+	$result['prod']['desc']['clear'] 			= isset($setting['exchange_1c_clear_desc_prod']) ? (string)$setting['exchange_1c_clear_desc_prod'] : '';
+	$result['prod']['desc']['replace']			= isset($setting['exchange_1c_replace_desc_prod']) ? (string)$setting['exchange_1c_replace_desc_prod'] : '';
 	$result['prod']['desc']['transliterate'] 		= isset($setting['exchange_1c_transliterate_desc_prod']) ? (int)$setting['exchange_1c_transliterate_desc_prod'] : 0;
-	$result['prod']['desc']['transliterate_type']	= isset($setting['exchange_1c_transliterate_type_desc_cat']) ? (int)$setting['exchange_1c_transliterate_type_desc_prod'] : 0;
+	$result['prod']['desc']['transliterate_type']		= isset($setting['exchange_1c_transliterate_type_desc_cat']) ? (int)$setting['exchange_1c_transliterate_type_desc_prod'] : 0;
 
-	$result['prod']['tag']['load'] 					= isset($setting['exchange_1c_load_tag_prod']) ? (int)$setting['exchange_1c_load_tag_prod'] : 1;
-	$result['prod']['tag']['rewrite'] 				= isset($setting['exchange_1c_rewrite_tag_prod']) ? (int)$setting['exchange_1c_rewrite_tag_prod'] : 1;
-	$result['prod']['tag']['generate'] 				= isset($setting['exchange_1c_generate_tag_prod']) ? (int)$setting['exchange_1c_generate_tag_prod'] : 0;
-	$result['prod']['tag']['template'] 				= isset($setting['exchange_1c_template_tag_prod']) ? (string)$setting['exchange_1c_template_tag_prod'] : '';
+	$result['prod']['tag']['load'] 				= isset($setting['exchange_1c_load_tag_prod']) ? (int)$setting['exchange_1c_load_tag_prod'] : 1;
+	$result['prod']['tag']['rewrite'] 			= isset($setting['exchange_1c_rewrite_tag_prod']) ? (int)$setting['exchange_1c_rewrite_tag_prod'] : 1;
+	$result['prod']['tag']['generate'] 			= isset($setting['exchange_1c_generate_tag_prod']) ? (int)$setting['exchange_1c_generate_tag_prod'] : 0;
+	$result['prod']['tag']['template'] 			= isset($setting['exchange_1c_template_tag_prod']) ? (string)$setting['exchange_1c_template_tag_prod'] : '';
 	$result['prod']['tag']['all_category_sep']		= isset($setting['exchange_1c_all_category_sep_tag_prod']) ? (string)$setting['exchange_1c_all_category_sep_tag_prod'] : ' ';
-	$result['prod']['tag']['clear'] 				= isset($setting['exchange_1c_clear_tag_prod']) ? (string)$setting['exchange_1c_clear_tag_prod'] : '';
-	$result['prod']['tag']['replace']				= isset($setting['exchange_1c_replace_tag_prod']) ? (string)$setting['exchange_1c_replace_tag_prod'] : '';
+	$result['prod']['tag']['clear'] 			= isset($setting['exchange_1c_clear_tag_prod']) ? (string)$setting['exchange_1c_clear_tag_prod'] : '';
+	$result['prod']['tag']['replace']			= isset($setting['exchange_1c_replace_tag_prod']) ? (string)$setting['exchange_1c_replace_tag_prod'] : '';
 	$result['prod']['tag']['transliterate'] 		= isset($setting['exchange_1c_transliterate_tag_prod']) ? (int)$setting['exchange_1c_transliterate_tag_prod'] : 0;
-	$result['prod']['tag']['transliterate_type']	= isset($setting['exchange_1c_transliterate_type_tag_cat']) ? (int)$setting['exchange_1c_transliterate_type_tag_prod'] : 0;
+	$result['prod']['tag']['transliterate_type']		= isset($setting['exchange_1c_transliterate_type_tag_cat']) ? (int)$setting['exchange_1c_transliterate_type_tag_prod'] : 0;
 
 	// product params
-	$result['model']	 							= isset($setting['exchange_1c_model']) ? (int)$setting['exchange_1c_model'] : 1;
-	$result['subtract'] 							= isset($setting['exchange_1c_subtract']) ? (int)$setting['exchange_1c_subtract'] : 1;
-	$result['shipping'] 							= isset($setting['exchange_1c_shipping']) ? (int)$setting['exchange_1c_shipping'] : 1;
-	$result['attribute_group'] 						= isset($setting['exchange_1c_attribute_group']) ? (int)$setting['exchange_1c_attribute_group'] : 0;
-	$result['update_date_available'] 				= isset($setting['exchange_1c_update_date_available']) ? (int)$setting['exchange_1c_update_date_available'] : 0;
-	$result['status_unavailable'] 					= isset($setting['exchange_1c_status_unavailable']) ? (int)$setting['exchange_1c_status_unavailable'] : 0;
+	$result['model']	 				= isset($setting['exchange_1c_model']) ? (int)$setting['exchange_1c_model'] : 1;
+	$result['subtract'] 					= isset($setting['exchange_1c_subtract']) ? (int)$setting['exchange_1c_subtract'] : 1;
+	$result['shipping'] 					= isset($setting['exchange_1c_shipping']) ? (int)$setting['exchange_1c_shipping'] : 1;
+	$result['attribute_group'] 				= isset($setting['exchange_1c_attribute_group']) ? (int)$setting['exchange_1c_attribute_group'] : 0;
+	$result['update_date_available'] 			= isset($setting['exchange_1c_update_date_available']) ? (int)$setting['exchange_1c_update_date_available'] : 0;
+	$result['status_unavailable'] 				= isset($setting['exchange_1c_status_unavailable']) ? (int)$setting['exchange_1c_status_unavailable'] : 0;
 
-	$result['stock_statuses']						= array(
-														'0' => isset($setting['exchange_1c_stock0']) ? (int)$setting['exchange_1c_stock0'] : 0,
-														'1' => isset($setting['exchange_1c_stock1']) ? (int)$setting['exchange_1c_stock1'] : 0,
-														'2' => isset($setting['exchange_1c_stock2']) ? (int)$setting['exchange_1c_stock2'] : 0
-													);
+	$result['stock_statuses']				= array(
+									'0' => isset($setting['exchange_1c_stock0']) ? (int)$setting['exchange_1c_stock0'] : 0,
+									'1' => isset($setting['exchange_1c_stock1']) ? (int)$setting['exchange_1c_stock1'] : 0,
+									'2' => isset($setting['exchange_1c_stock2']) ? (int)$setting['exchange_1c_stock2'] : 0
+								);
 
 	// langs
-	$result['translit_name'] 						= isset($setting['exchange_1c_translit_name']) ? (int)$setting['exchange_1c_translit_name'] : 0;
-	$result['save_other_lang'] 						= isset($setting['exchange_1c_save_other_lang']) ? (int)$setting['exchange_1c_save_other_lang'] : 0;
+	$result['translit_name'] 				= isset($setting['exchange_1c_translit_name']) ? (int)$setting['exchange_1c_translit_name'] : 0;
+	$result['save_other_lang'] 				= isset($setting['exchange_1c_save_other_lang']) ? (int)$setting['exchange_1c_save_other_lang'] : 0;
 
 	// secure
-	$result['secure_id']							= isset($setting['exchange_1c_secure_id']) ? (string)$setting['exchange_1c_secure_id'] : '';
-	$result['secure_login']							= isset($setting['exchange_1c_secure_login']) ? (string)$setting['exchange_1c_secure_login'] : '';
-	$result['secure_pswd']							= isset($setting['exchange_1c_secure_pswd']) ? (string)$setting['exchange_1c_secure_pswd'] : '';
+	$result['secure_id']					= isset($setting['exchange_1c_secure_id']) ? (string)$setting['exchange_1c_secure_id'] : '';
+	$result['secure_login']					= isset($setting['exchange_1c_secure_login']) ? (string)$setting['exchange_1c_secure_login'] : '';
+	$result['secure_pswd']					= isset($setting['exchange_1c_secure_pswd']) ? (string)$setting['exchange_1c_secure_pswd'] : '';
 
 
 	return $result;
 	}
 
 	/**
-	* @param string $signature
-	* @return boolean
-	*/
+	 * @param string $signature
+	 * @return boolean
+	 */
 	private function _validateSignature($signature) {
 		$hash = md5($this->setting['secure_id'].';'.$this->setting['secure_login'].';'.$this->setting['secure_pswd']);
 		return $hash === $signature;
 	}
 
 	/**
-    * @param array $args
-    * @param string $template
-    * @param string $clear
-    * @param string $replace
-    * @return string
-    */
+	 * @param array $args
+	 * @param string $template
+	 * @param string $clear
+	 * @param string $replace
+	 * @return string
+	 */
 	private function _parseTemplate($args, $template, $clear, $replace, $all_category_sep) {
 		$args[1] = str_replace($this->all_category_sep, $all_category_sep, $args[1]);
 
@@ -224,13 +230,13 @@ class OneCGateway extends Controller{
 	}
 
 	/**
-	* @param array $old_info
-	* @param array $new_info
-	* @param array $template_args
-	* @param array $setting
-	* @param string $arg_name
-	* @return string
-	*/
+	 * @param array $old_info
+	 * @param array $new_info
+	 * @param array $template_args
+	 * @param array $setting
+	 * @param string $arg_name
+	 * @return string
+	 */
 	private function _prepareArg($old_info, $new_info, $template_args, $setting, $arg_name) {
 		if ($setting['rewrite'] == 0 && isset($old_info[$arg_name]) && $old_info[$arg_name]) {
 			$result = $old_info[$arg_name];
@@ -251,7 +257,11 @@ class OneCGateway extends Controller{
 		}
 		return $result;
 	}
-	// для id языков
+
+	/**
+	 * @param string $code
+	 * @return mixed
+	 */
 	private function _getLanguageId($code = false) {
 		$this->load->model("localisation/language");
 
@@ -266,58 +276,67 @@ class OneCGateway extends Controller{
 		}
 		return 0;
 	}
+
+	/**
+	 * @return array
+	 */
 	private function _getStores() {
 		$stores[] = 0;
+
 		$this->load->model('setting/store');
+
 		foreach ($this->model_setting_store->getStores() as $store) {
 			$stores[] = (int)$store['store_id'];
 		}
+
 		return $stores;
 	}
 
 	/**
-   * @param mixed $args
-   * @param string $signature
-   * @return mixed
-   */
+	 * @param mixed $args
+	 * @param string $signature
+	 * @return mixed
+	 */
 	public function sendCategories($args, $signature) {
-		// пишем логи
-		if ($this->enable_logs) {
-			file_put_contents(__DIR__.'/log_send_categories.log', var_export($args, true)."\r\n", FILE_APPEND);
-			/*$fp = fopen( "./log_send_categories.log", "a+" );
-			fwrite($fp, var_export($args, true)."\r\n");
-			fclose($fp);*/
-		}
-		// права доступа (цифровая подпись)
+		// Пишем логи
+		$this->log($args, 'sendCategories(): $args', "send_categories_data.log");
+
+		// Права доступа (цифровая подпись)
 		if (!$this->_validateSignature($signature)) {
-			if ($this->enable_logs) {
-				$fp = fopen( "./log_send_categories.log", "a+" );
-				fwrite($fp, 'Signature is not correct'."\r\n");
-				fclose($fp);
-			}
+			$this->log("Signature is not correct", 'sendCategories():');
 			return array('error' => 'Signature is not correct');
-		}	file_put_contents(__DIR__.'/mylog_send_categories.log', 'Сигнатура правильная'."\r\n", FILE_APPEND);
-		// подключаем файл для работы с базой
+		}
+
+		// Подключаем файл для работы с базой
 		$this->load->model('catalog/category');
-        file_put_contents(__DIR__.'/mylog_send_categories.log', 'Модель загружена'."\r\n", FILE_APPEND);
+
 		// Языки
 		$languages = $this->_getLanguageId(); // id всех языков
+		$this->log($languages, 'sendCategories(): $languages');
 
-		$lang = $this->_getLanguageId('ru-ru'); // id языка с iso_code = 'ru'
+		// Язык по умолчанию
+		$lang = $this->_getLanguageId($this->language_default); // id языка с iso_code = $this->language_default
+		$this->log($lang, 'sendCategories(): $lang');
 
-		$args = (array)$args; // объявляем массив для данных из 1с
-        file_put_contents(__DIR__.'/mylog_send_categories.log', 'Аргументы:'.json_encode($args)."\r\n", FILE_APPEND);
+		$args = (array)$args; // Объявляем массив для данных из 1с
+
 		if ($args['category']) {
-            file_put_contents(__DIR__.'/mylog_send_categories.log', 'Пробуем сохранить категории'."\r\n", FILE_APPEND);
 			$this->_saveCategoriesTree($args['category'], 0, $languages, $lang);
 		}
+
 		//$this->cache->delete('category');
-        file_put_contents(__DIR__.'/mylog_send_categories.log', 'Успешное завершение!'."\r\n", FILE_APPEND);
+
+		$this->log("Операция завершена", 'sendCategories():');
+
 		return array('error' => '', 'category' => $this->category_ids);
-
-
 	}
 
+	/**
+	 * @param 
+	 * @param 
+	 * @param 
+	 * @param 
+	 */
 	private function _saveCategoriesTree($categories, $parent_id, $languages, $lang) {
 		foreach ($categories as $category) {
 			if ($category) {
@@ -334,14 +353,23 @@ class OneCGateway extends Controller{
 		}
 	}
 
+	/**
+	 * @param integer $category_id
+	 * @return string
+	 */
 	private function _getCategory($category_id) {
 		return $this->model_catalog_category->getCategory($category_id);
 	}
 
+	/**
+	 * @param mixed $args
+	 * @param array $languages
+	 * @param integer $lang
+	 * @return integer
+	 */
 	private function _saveCategory($args, $languages, $lang) {
 		$category_id = (int)$args['id'];
 
-        file_put_contents(__DIR__.'/mylog_send_categories.log', 'Пытаемся сохранить категорию 1'."\r\n", FILE_APPEND);
 		if ($category_id) {
 			$category_description = $this->model_catalog_category->getCategoryDescriptions($category_id);
 			if (!empty($category_description[$lang])) {
@@ -353,44 +381,41 @@ class OneCGateway extends Controller{
 			$category_info = array();
 			$category_description = array();
 		}
-        file_put_contents(__DIR__.'/mylog_send_categories.log', 'Пытаемся сохранить категорию 2'."\r\n", FILE_APPEND);
-		$template_args = array($args['name'], $this->_getAllCatsForCat($args), '', '', '', '');
-        file_put_contents(__DIR__.'/mylog_send_categories.log', 'Пытаемся сохранить категорию 2.1'."\r\n", FILE_APPEND);
-		$seo_h1 			= $this->_prepareArg($category_info, $args, $template_args, $this->setting['cat']['h1'], 'seo_h1');
-		$seo_title 			= $this->_prepareArg($category_info, $args, $template_args, $this->setting['cat']['title'], 'seo_title');
+
+		$template_args 		= array($args['name'], $this->_getAllCatsForCat($args), '', '', '', '');
+		$seo_h1 		= $this->_prepareArg($category_info, $args, $template_args, $this->setting['cat']['h1'], 'seo_h1');
+		$seo_title 		= $this->_prepareArg($category_info, $args, $template_args, $this->setting['cat']['title'], 'seo_title');
 		$meta_keyword 		= $this->_prepareArg($category_info, $args, $template_args, $this->setting['cat']['mkey'], 'meta_keyword');
 		$meta_description 	= $this->_prepareArg($category_info, $args, $template_args, $this->setting['cat']['mdesc'], 'meta_description');
 		$description 		= $this->_prepareArg($category_info, $args, $template_args, $this->setting['cat']['desc'], 'description');
-		$keyword 			= $this->_prepareArg($category_info, $args, $template_args, $this->setting['cat']['url'], 'keyword');
-        file_put_contents(__DIR__.'/mylog_send_categories.log', 'Пытаемся сохранить категорию 2.2'."\r\n", FILE_APPEND);
-		$keyword 			= $this->_makeUniqueKeyword($keyword, 'category_id', $category_id);
-        file_put_contents(__DIR__.'/mylog_send_categories.log', 'Пытаемся сохранить категорию 2.3'."\r\n", FILE_APPEND);
-		$descriptions = array();
+		$keyword 		= $this->_prepareArg($category_info, $args, $template_args, $this->setting['cat']['url'], 'keyword');
+		$keyword 		= $this->_makeUniqueKeyword($keyword, 'category_id', $category_id);
+		$descriptions 		= array();
+
 		foreach ($languages as $k => $v) {
 			if ($v["language_id"] == $lang) {
 				$descriptions[$v["language_id"]] = array(
-					'name' 						=> $args['name'],
-			        'seo_h1' 					=> $seo_h1,
-			        'seo_title' 				=> $seo_title,
-			        'meta_keyword' 				=> $meta_keyword,
-			        'meta_description' 			=> $meta_description,
-			        'description' 				=> $description,
-					'meta_title'                => $seo_title,
-
+					'name' 				=> $args['name'],
+					'seo_h1' 			=> $seo_h1,
+					'seo_title' 			=> $seo_title,
+					'meta_keyword' 			=> $meta_keyword,
+					'meta_description' 		=> $meta_description,
+					'description' 			=> $description,
+					'meta_title'			=> $seo_title,
 				);
 			} else {
 				$descriptions[$v["language_id"]] = (isset($category_description[$v["language_id"]]) && $this->setting['save_other_lang']) ? $category_description[$v["language_id"]] : array(
-					'name' 						=> $this->setting['translit_name'] ? $this->_transliterateString($args['name'], false) : '',//$this->_transliterateString($args['name'], false), //: '',
-			        'seo_h1' 					=> '',
-			        'seo_title' 				=> '',
-			        'meta_keyword' 				=> '',
-			        'meta_description' 			=> '',
-					'meta_title'                => '',
-			        'description' 				=> '',
+					'name' 				=> $this->setting['translit_name'] ? $this->_transliterateString($args['name'], false) : '',//$this->_transliterateString($args['name'], false), //: '',
+					'seo_h1' 			=> '',
+					'seo_title' 			=> '',
+					'meta_keyword' 			=> '',
+					'meta_description' 		=> '',
+					'meta_title' 			=> '',
+					'description' 			=> '',
 				);
 			}
 		}
-        file_put_contents(__DIR__.'/mylog_send_categories.log', 'Пытаемся сохранить категорию 3'."\r\n", FILE_APPEND);
+
 		if (isset($args['dir_image']) && $args['dir_image']) {
 			$args['dir_image'] = $this->image_dir . $args['dir_image'];
 		}
@@ -400,17 +425,19 @@ class OneCGateway extends Controller{
 		}
 
 		$data = array(
-		  'parent_id' 				=> $args['parent_id'],
-		  'top' 					=> $args['top'],
-		  'status' 					=> $args['status'],
-		  'image' 					=> isset($args['dir_image']) ? $args['dir_image'] : '',
-		  'sort_order' 				=> $args['sort_order'],
-		  'keyword' 				=> $keyword,
-		  'category_description' 	=> $descriptions,
-		  'category_store' 			=> $this->_getStores(),
-		  'column' 					=> '0',
+			'parent_id' 			=> $args['parent_id'],
+			'top' 				=> $args['top'],
+			'status' 			=> $args['status'],
+			'image' 			=> isset($args['dir_image']) ? $args['dir_image'] : '',
+			'sort_order' 			=> $args['sort_order'],
+			'keyword' 			=> $keyword,
+			'category_description' 		=> $descriptions,
+			'category_store' 		=> $this->_getStores(),
+			'column' 			=> '0',
 		);
-        file_put_contents(__DIR__.'/mylog_send_categories.log', 'Данные для сохранения:'.json_encode($data)."\r\n", FILE_APPEND);
+
+		$this->log($data, '_saveCategory(): $data', "send_categories_data.log");
+
 		if ($args['delete'] == '0') {
 			if ($category_id) {
 				$this->model_catalog_category->editCategory($category_id, $data);
@@ -426,26 +453,17 @@ class OneCGateway extends Controller{
 		}
 		return $category_id;
 	}
+
 	/**
 	* @param mixed $args
 	* @param string $signature
 	* @return mixed
 	*/
 	public function sendProducts($args, $signature) {
-		file_put_contents(__DIR__.'/log_send_products.log', 'test', FILE_APPEND);
-		if ($this->enable_logs) {
-			file_put_contents(__DIR__.'/log_send_products.log', var_export($args, true)."\r\n", FILE_APPEND);
-			/*$fp = fopen( "./log_send_products.log", "a+" );
-			fwrite($fp, var_export($args, true)."\r\n");
-			fclose($fp);*/
-		}
+		$this->log($args, 'sendProducts(): $args', "send_products_data.log");
 
 		if (!$this->_validateSignature($signature)) {
-			if ($this->enable_logs) {
-				$fp = fopen( "./log_send_products.log", "a+" );
-				fwrite($fp, 'Signature is not correct'."\r\n");
-				fclose($fp);
-			}
+			$this->log("Signature is not correct", 'sendProducts():');
 			return array('error' => 'Signature is not correct');
 		}
 
@@ -453,16 +471,22 @@ class OneCGateway extends Controller{
 		$this->load->model('catalog/manufacturer');
 		$this->load->model('extension/module/exchange_1c');
 
-		$lang = $this->_getLanguageId('ru');
 		$languages = $this->_getLanguageId();
+		$this->log($languages, 'sendProducts(): $languages');
+
+		$lang = $this->_getLanguageId($this->language_default);
+		$this->log($lang, 'sendProducts(): $lang');
 
 		$args = (array)$args;
 		$products = $args['product'];
+
 		if ($products) {
 			foreach ($products as $product) {
 				if ($product) {
 					$product = (array)$product;
 					if (!$this->_getProduct((int)$product['id'])) {
+						$this->log("Товар не найден", '_getProduct(' . $product['id'] . '):');
+
 						$product['id'] = '0';
 					}
 					$this->_saveProduct($product, $languages, $lang);
@@ -470,11 +494,23 @@ class OneCGateway extends Controller{
 			}
 		}
 
+		$this->log("Операция завершена", 'sendProducts():');
+
 		return array('error' => '', 'product' => $this->product_ids);
 	}
+
+	/**
+	 * @param integer $product_id
+	 * @return mixed
+	 */
 	private function _getProduct($product_id) {
 		return $this->model_catalog_product->getProduct($product_id);
 	}
+
+	/**
+	 * @param mixed $images
+	 * @return array
+	 */
 	private function _productImages($images) {
 		$buffer = array();
 		$img_dir = $this->image_dir . '/product/';
@@ -495,8 +531,21 @@ class OneCGateway extends Controller{
 		}
 		return $buffer;
 	}
+
+	/**
+	 * @param
+	 * @param
+	 * @return
+	 */
 	private function _saveImage($name, $data) {
-	    if ($fp = fopen("./../image/$name", "wb")) {
+		$this->log($name, '_saveImage(): $name');
+		$this->log($data, '_saveImage(): $data');
+
+		if (!is_dir(dirname(DIR_IMAGE . $name))) {
+			mkdir(dirname(DIR_IMAGE . $name), 0755, true);
+		}
+
+		if ($fp = fopen(DIR_IMAGE . $name, "wb")) {
 			$wlen = 0;
 			for ($written = 0; $written < strlen(base64_decode($data)); $written += $wlen ) {
 				$wlen = fwrite($fp, substr(base64_decode($data), $written));
@@ -505,10 +554,19 @@ class OneCGateway extends Controller{
 				}
 			}
 			fclose($fp);
-			chmod("./../image/$name", 0644);
+			chmod(DIR_IMAGE . $name, 0644);
 		}
 	}
+
+	/**
+	 * @param
+	 * @param
+	 * @param
+	 * @return
+	 */
 	private function _saveProduct($args, $languages, $lang) {
+		$this->log($args, '_saveProduct(): $args', "send_products_data.log");
+
 		$product_id = (int)$args['id'];
 
 		if ($product_id) {
@@ -525,15 +583,16 @@ class OneCGateway extends Controller{
 			$product_specials = array();
 		}
 
-		$template_args = array($args['name'], $this->_getAllCatsForProd($args['main_category_id']), $args['manufacturer'], $args['name'], $args['model'], $this->currency->format($args['price']));
+		$template_args = array($args['name'], $this->_getAllCatsForProd($args['main_category_id']), $args['manufacturer'], $args['name'], $args['model'], $this->currency->format($args['price'], $this->config->get('config_currency')));
 
 		$seo_h1 			= $this->_prepareArg($product_info, $args, $template_args, $this->setting['prod']['h1'], 'seo_h1');
 		$seo_title 			= $this->_prepareArg($product_info, $args, $template_args, $this->setting['prod']['title'], 'seo_title');
-		$meta_keyword 		= $this->_prepareArg($product_info, $args, $template_args, $this->setting['prod']['mkey'], 'meta_keyword');
-		$meta_description 	= $this->_prepareArg($product_info, $args, $template_args, $this->setting['prod']['mdesc'], 'meta_description');
-		$description 		= $this->_prepareArg($product_info, $args, $template_args, $this->setting['prod']['desc'], 'description');
+		$meta_keyword 			= $this->_prepareArg($product_info, $args, $template_args, $this->setting['prod']['mkey'], 'meta_keyword');
+		$meta_description 		= $this->_prepareArg($product_info, $args, $template_args, $this->setting['prod']['mdesc'], 'meta_description');
+		$description 			= $this->_prepareArg($product_info, $args, $template_args, $this->setting['prod']['desc'], 'description');
 		$tag		 		= $this->_prepareArg($product_info, $args, $template_args, $this->setting['prod']['tag'], 'tag');
 		$keyword 			= $this->_prepareArg($product_info, $args, $template_args, $this->setting['prod']['url'], 'keyword');
+
 		if ($keyword) {
 			$keyword = $this->_makeUniqueKeyword($keyword, 'product_id', $product_id);
 		}
@@ -542,25 +601,25 @@ class OneCGateway extends Controller{
 		foreach ($languages as $k => $v) {
 			if ($v["language_id"] == $lang) {
 				$descriptions[$v["language_id"]] = array(
-					'name' 						=> $args['name'],
-			        'seo_h1' 					=> $seo_h1,
-			        'seo_title' 				=> $seo_title,
-			        'meta_keyword' 				=> $meta_keyword,
-			        'meta_description' 			=> $meta_description,
-			        'description' 				=> $description,
-			        'tag'						=> $tag,
-					'meta_title'                => $seo_title,
+					'name' 			=> $args['name'],
+					'seo_h1' 		=> $seo_h1,
+					'seo_title' 		=> $seo_title,
+					'meta_keyword' 		=> $meta_keyword,
+					'meta_description' 	=> $meta_description,
+					'description' 		=> $description,
+					'tag' 			=> $tag,
+					'meta_title' 		=> $seo_title,
 				);
 			} else {
 				$descriptions[$v["language_id"]] = (isset($product_description[$v["language_id"]]) && $this->setting['save_other_lang']) ? $product_description[$v["language_id"]] : array(
-					'name' 						=> $this->setting['translit_name'] ? $this->_transliterateString($args['name'], false) : '',
-			        'seo_h1' 					=> '',
-			        'seo_title' 				=> '',
-			        'meta_keyword' 				=> '',
-			        'meta_description' 			=> '',
-			        'description' 				=> '',
-			        'tag'						=> '',
-					'meta_title'                => '',
+					'name' 			=> $this->setting['translit_name'] ? $this->_transliterateString($args['name'], false) : '',
+					'seo_h1' 		=> '',
+					'seo_title' 		=> '',
+					'meta_keyword' 		=> '',
+					'meta_description' 	=> '',
+					'description' 		=> '',
+					'tag' 			=> '',
+					'meta_title' 		=> '',
 				);
 			}
 		}
@@ -590,69 +649,79 @@ class OneCGateway extends Controller{
 				$manufacturer_id = $manufacturer_info['manufacturer_id'];
 			}
 		}
+
 		if (isset($args['dir_image']) && $args['dir_image'] && $args['image']) {
 			$args['dir_image'] = $this->image_dir . $args['dir_image'];
 		}
+
 		if (isset($args['dir_image']) && $args['dir_image'] && $args['image']) {
 			$this->_saveImage($args['dir_image'], $args['image']);
 		}
 
 		$data = array(
-		  'status' 				=> $args['status'],
-		  'image' 				=> isset($args['dir_image']) ?  $args['dir_image'] : '',
-		  'product_image' 		=> isset($args['product_image']) ? $this->_productImages((array)$args['product_image']) : array(),
-		  'keyword' 			=> $keyword,
-		  'quantity' 			=> $args['quantity'],
-		  'price' 				=> $args['price'],
-		  'main_category_id' 	=> $args['main_category_id'],
-		  'model' 				=> $args['model'] ? $args['model'] : ($this->setting['model'] == 1 ? $args['name'] : $args['scu']),
-		  'product_description' => $descriptions,
-		  'sku' 				=> $args['scu'],
-		  'upc' 				=> $args['upc'],
-		  'product_category' 	=> $this->_productCategories((array)$args['categories']),
-		  'manufacturer_id' 	=> $manufacturer_id,
-		  'sort_order' 			=> isset($args['sort_order']) ? $args['sort_order'] : '0',
-		  'product_related'		=> $this->_relatedProducts((array)$args['product_related']),
-		  'stock_status_id' 	=> isset($this->setting['stock_statuses'][$args['stock_status']]) ? $this->setting['stock_statuses'][$args['stock_status']] : $this->setting['stock_status_id'],
-		  'weight' 				=> isset($args['weight']) ? $args['weight'] : 0,
-		  'length' 				=> isset($args['size_length']) ? $args['size_length'] : '0',
-		  'width' 				=> isset($args['size_width']) ? $args['size_width'] : '0',
-		  'height' 				=> isset($args['size_height']) ? $args['size_height'] : '0',
+			'status' 		=> $args['status'],
+			'image' 		=> isset($args['dir_image']) ? $args['dir_image'] : '',
+			'product_image' 	=> isset($args['product_image']) ? $this->_productImages((array)$args['product_image']) : array(),
+			'keyword' 		=> $keyword,
+			'quantity' 		=> $args['quantity'],
+			'price' 				=> $args['price'],
+			'main_category_id' 	=> $args['main_category_id'],
+			'model' 		=> $args['model'] ? $args['model'] : ($this->setting['model'] == 1 ? $args['name'] : $args['scu']),
+			'product_description' 	=> $descriptions,
+			'sku' 			=> $args['scu'],
+			'upc' 			=> $args['upc'],
+			'product_category' 	=> $this->_productCategories((array)$args['categories']),
+			'manufacturer_id' 	=> $manufacturer_id,
+			'sort_order' 		=> isset($args['sort_order']) ? $args['sort_order'] : '0',
+			'product_related'	=> $this->_relatedProducts((array)$args['product_related']),
+			'stock_status_id' 	=> isset($this->setting['stock_statuses'][$args['stock_status']]) ? $this->setting['stock_statuses'][$args['stock_status']] : $this->setting['stock_status_id'],
+			'weight' 		=> isset($args['weight']) ? $args['weight'] : 0,
+			'length' 		=> isset($args['size_length']) ? $args['size_length'] : '0',
+			'width' 		=> isset($args['size_width']) ? $args['size_width'] : '0',
+			'height' 		=> isset($args['size_height']) ? $args['size_height'] : '0',
 
-		  'product_store' 		=> $this->_getStores(),
-		  'shipping' 			=> $this->setting['shipping'],
-		  'subtract' 			=> $this->setting['subtract'],
-		  'date_available' 		=> (!$product_id || $this->setting['update_date_available'] == 1) ? date('Y-m-d H:i:s') : $product_info['date_available'],
-		  'length_class_id' 	=> 1,
-		  'weight_class_id' 	=> 1,
-		  'ean' 				=> '',
-		  'jan' 				=> '',
-		  'isbn' 				=> '',
-		  'mpn' 				=> '',
-		  'location' 			=> '',
-		  'minimum' 			=> '0',
-		  'points' 				=> '0',
-		  'tax_class_id' 		=> '0',
+			'product_store' 	=> $this->_getStores(),
+			'shipping' 		=> $this->setting['shipping'],
+			'subtract' 		=> $this->setting['subtract'],
+			'date_available' 	=> (!$product_id || $this->setting['update_date_available'] == 1) ? date('Y-m-d H:i:s') : $product_info['date_available'],
+			'length_class_id' 	=> 1,
+			'weight_class_id' 	=> 1,
+			'ean' 			=> '',
+			'jan' 			=> '',
+			'isbn' 			=> '',
+			'mpn' 			=> '',
+			'location' 		=> '',
+			'minimum' 		=> '0',
+			'points' 		=> '0',
+			'tax_class_id' 		=> '0',
 
-		  'product_discount'	=> $product_discounts,
-		  'product_special'		=> $product_specials,
+			'product_discount'	=> $product_discounts,
+			'product_special'	=> $product_specials,
 		);
 
 		if ($data['quantity'] == 0 && $this->setting['status_unavailable'] == 1) {
 			$data['status'] = 0;
 		}
 
+		$this->log($data, '_saveProduct(): $data', "send_products_data.log");
+
 		$option_exchange = $this->model_extension_module_exchange_1c->getProductOptionValueExchange($product_id);
 
 		if ($args['delete'] == '0') {
 			if ($product_id) {
+				$this->log("Вызов model_catalog_product->editProduct()", '_saveProduct():');
+
 				$this->model_catalog_product->editProduct($product_id, $data);
 			} else {
+				$this->log("Вызов model_catalog_product->addProduct()", '_saveProduct():');
+
 				$product_id = $this->model_catalog_product->addProduct($data);
 				$this->product_ids[$args['id_1c']] = $product_id;
 			}
 		} else {
 			if ($product_id) {
+				$this->log("Вызов model_catalog_product->deleteProduct()", '_saveProduct():');
+
 				$this->model_catalog_product->deleteProduct($product_id);
 				$product_id = 0;
 			}
@@ -665,10 +734,14 @@ class OneCGateway extends Controller{
 
 		return $product_id;
 	}
+
+	/**
+	 * @return integer
+	 */
 	private function _addGroupAttribute() {
 		$name = "Характеристики";
 		$sort_order = 1;
-		$lang = $this->_getLanguageId('ru');
+		$lang = $this->_getLanguageId($this->language_default);
 		$languages = $this->_getLanguageId();
 
 		$db = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
@@ -686,11 +759,11 @@ class OneCGateway extends Controller{
 
 				foreach ($languages as $k => $v) {
 					if ($v["language_id"] == $lang) {
-					$db->query("insert into " . DB_PREFIX . "attribute_group_description values ($attribute_group_id, $lang, '$name');");
-				} else {
-					$name_lang = $this->setting['translit_name'] ? $this->_transliterateString($name, false) : '';
-					$db->query("insert into " . DB_PREFIX . "attribute_group_description values ($attribute_group_id, " . $v["language_id"] . ", '$name_lang');");
-				}
+						$db->query("insert into " . DB_PREFIX . "attribute_group_description values ($attribute_group_id, $lang, '$name');");
+					} else {
+						$name_lang = $this->setting['translit_name'] ? $this->_transliterateString($name, false) : '';
+						$db->query("insert into " . DB_PREFIX . "attribute_group_description values ($attribute_group_id, " . $v["language_id"] . ", '$name_lang');");
+					}
 				}
 				return $attribute_group_id;
 			} else {
@@ -700,6 +773,12 @@ class OneCGateway extends Controller{
 			return $find->row["attribute_group_id"];
 		}
 	}
+
+	/**
+	 * @param
+	 * @param
+	 * @param
+	 */
 	private function _saveProductAttributes($product_id, $attributes, $product_attributes) {
 		$attribute_names = is_array($attributes['property']) ? $attributes['property'] : array();
 		$attribute_values = is_array($attributes['value']) ? $attributes['value'] : array();
@@ -718,7 +797,7 @@ class OneCGateway extends Controller{
 			$attribute_value = $attribute_values[$k];
 
 			$sort_order = 1;
-			$lang = $this->_getLanguageId('ru');
+			$lang = $this->_getLanguageId($this->language_default);
 			$languages = $this->_getLanguageId();
 
 			$db = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
@@ -766,6 +845,12 @@ class OneCGateway extends Controller{
 		}
 	}
 
+	/**
+	 * @param
+	 * @param
+	 * @param
+	 * @return mixed
+	 */
 	private function _saveProductOptions($product_id, $args, $option_exchange) {
 		$db = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
 		$rg = new Registry();
@@ -775,7 +860,7 @@ class OneCGateway extends Controller{
 
 		$related = $this->model_extension_module_exchange_1c->existExtension('module', 'related_options'); // checking if module related_option is installed
 
-		$language_id = $this->_getLanguageId('ru');
+		$language_id = $this->_getLanguageId($this->language_default);
 		$languages = $this->_getLanguageId();
 		$sort_order = 1;
 		$required = 1;
@@ -801,7 +886,6 @@ class OneCGateway extends Controller{
 		$result = array();
 		$result_option = array();
 
-
 		foreach ($option_names as $key => $option_name) {
 
 			$option_value = $option_values[$key];
@@ -814,7 +898,6 @@ class OneCGateway extends Controller{
 
 			$trimmed_option_value = trim($option_value);
 			if (empty($trimmed_option_value)) {
-
 				continue;
 			}
 
@@ -884,9 +967,11 @@ class OneCGateway extends Controller{
 			// price
 			$sgn = $option_price < 0 ? '-' : '+';
 			$pr = abs($option_price);
+
 			// weight
 			$sgn_wght = $option_w < 0 ? '-' : '+';
 			$wght = abs($option_w);
+
 			// quantity
 			$quan = (int)$option_q;
 
@@ -910,7 +995,7 @@ class OneCGateway extends Controller{
 
 				$db->query("insert into " . DB_PREFIX . "product_option_value (`product_option_id`, `product_id`, `option_id`, `option_value_id`, `quantity`, `subtract`, `price`, `price_prefix`, `points`, `points_prefix`, `weight`, `weight_prefix`)
 						values ($product_option_id, $product_id, $option_id, $option_value_id, $quan, 1, $pr, '$sgn', 0, '+', $wght, '$sgn_wght');");
-				$product_option_value_id =  $db->getLastId();
+				$product_option_value_id = $db->getLastId();
 			} elseif (!$find_result) {
 				$option_value_id = $option_exchange[$id_1c]['option_value_id'];
 				$product_option_value_id = $option_exchange[$id_1c]['product_option_value_id'];
@@ -925,9 +1010,9 @@ class OneCGateway extends Controller{
 					if (!isset($option_exchange[$id_1c])) {
 						$db->query("insert into " . DB_PREFIX . "product_option_value (`product_option_id`, `product_id`, `option_id`, `option_value_id`, `quantity`, `subtract`, `price`, `price_prefix`, `points`, `points_prefix`, `weight`, `weight_prefix`)
 							values ($product_option_id, $product_id, $option_id, $option_value_id, $quan, 1, $pr, '$sgn', 0, '+', $wght, '$sgn_wght');");
-						$product_option_value_id =  $db->getLastId();
+						$product_option_value_id = $db->getLastId();
 					} else {
-						$product_option_value_id =  $option_exchange[$id_1c]['product_option_value_id'];
+						$product_option_value_id = $option_exchange[$id_1c]['product_option_value_id'];
 						$db->query("insert into " . DB_PREFIX . "product_option_value (`product_option_value_id`, `product_option_id`, `product_id`, `option_id`, `option_value_id`, `quantity`, `subtract`, `price`, `price_prefix`, `points`, `points_prefix`, `weight`, `weight_prefix`)
 							values ($product_option_value_id, $product_option_id, $product_id, $option_id, $option_value_id, $quan, 1, $pr, '$sgn', 0, '+', $wght, '$sgn_wght');");
 					}
@@ -942,7 +1027,6 @@ class OneCGateway extends Controller{
 				$db->query("update " . DB_PREFIX . "product_option_value set `master_option_value` = $master_option_value WHERE `product_option_value_id` = $product_option_value_id;");
 			}
 
-
 			// (5) save exchange data
 			$this->model_extension_module_exchange_1c->saveProductOptionValueExchange($product_id, $option_id, $option_value_id, $product_option_id, $product_option_value_id, $id_1c);
 			$data = array(
@@ -956,7 +1040,13 @@ class OneCGateway extends Controller{
 			$result[$key] = $data;
 		}
 	}
-		private function _productCategories($categories) {
+
+	/**
+	 * @param
+	 * @param
+	 * @return
+	 */
+	private function _productCategories($categories) {
 		$result = array();
 		if (isset($categories['id']) && is_array($categories['id'])) {
 			$last = array_pop($categories['id']);
@@ -967,7 +1057,12 @@ class OneCGateway extends Controller{
 
 		return $result;
 	}
-		private function _relatedProducts($product_related) {
+
+	/**
+	 * @param
+	 * @return
+	 */
+	private function _relatedProducts($product_related) {
 		$result = array();
 		if (isset($product_related['related']) && is_array($product_related['related'])) {
 			$last = array_pop($product_related['related']);
@@ -975,15 +1070,16 @@ class OneCGateway extends Controller{
 		}
 		return $result;
 	}
+
 	/**
-	* @param int $category_id
-	* @return string
-	*/
+	 * @param int $category_id
+	 * @return string
+	 */
 	private function _getAllCatsForProd($category_id) {
 		$this->load->model('catalog/category');
 
 		$category_description = $this->model_catalog_category->getCategoryDescriptions($category_id);
-		$category_info = array_merge(isset($category_description[$this->_getLanguageId('ru')]) ? $category_description[$this->_getLanguageId('ru')] : array(), $this->model_catalog_category->getCategory($category_id));
+		$category_info = array_merge(isset($category_description[$this->_getLanguageId($this->language_default)]) ? $category_description[$this->_getLanguageId($this->language_default)] : array(), $this->model_catalog_category->getCategory($category_id));
 
 		$parent_categories = array(isset($category_info['name']) ? $category_info['name'] : '');
 		$category = $category_info;
@@ -992,7 +1088,7 @@ class OneCGateway extends Controller{
 			while ($category['parent_id'] > 0)
 			{
 				$category_description = $this->model_catalog_category->getCategoryDescriptions($category['parent_id']);
-				$category = array_merge($category_description[$this->_getLanguageId('ru')], $this->model_catalog_category->getCategory($category['parent_id']));
+				$category = array_merge($category_description[$this->_getLanguageId($this->language_default)], $this->model_catalog_category->getCategory($category['parent_id']));
 
 				array_unshift($parent_categories, $category['name']);
 			}
@@ -1000,10 +1096,11 @@ class OneCGateway extends Controller{
 
 		return implode($this->all_category_sep, $parent_categories);
 	}
+
 	/**
-	* @param array $category_info
-	* @return string
-	*/
+	 * @param array $category_info
+	 * @return string
+	 */
 	private function _getAllCatsForCat($category_info) {
 		$this->load->model('catalog/category');
 
@@ -1014,9 +1111,9 @@ class OneCGateway extends Controller{
 			while ($category['parent_id'] > 0)
 			{
 				$category_description = $this->model_catalog_category->getCategoryDescriptions($category['parent_id']);
-				$lang1 = $this->_getLanguageId('ru');
+				$lang1 = $this->_getLanguageId($this->language_default);
 				if (!empty($lang1)){
-					$category = array_merge($category_description[$this->_getLanguageId('ru')], $this->model_catalog_category->getCategory($category['parent_id']));
+					$category = array_merge($category_description[$this->_getLanguageId($this->language_default)], $this->model_catalog_category->getCategory($category['parent_id']));
 				} else {
 					$category = array_merge($category_description[(int)$this->config->get('config_language_id')], $this->model_catalog_category->getCategory($category['parent_id']));
 				}
@@ -1028,24 +1125,15 @@ class OneCGateway extends Controller{
 	}
 
 	/**
-	* @param mixed $args
-	* @param string $signature
-	* @return mixed
-	*/
+	 * @param mixed $args
+	 * @param string $signature
+	 * @return mixed
+	 */
 	public function sendSeries($args, $signature) {
-		if ($this->enable_logs) {
-			file_put_contents(__DIR__.'/log_send_series.log', var_export($args, true)."\r\n", FILE_APPEND);
-			/*$fp = fopen( "./log_send_series.log", "a+" );
-			fwrite($fp, var_export($args, true)."\r\n");
-			fclose($fp);*/
-		}
+		$this->log($args, 'sendSeries(): $args', "send_series_data.log");
 
 		if (!$this->_validateSignature($signature)) {
-			if ($this->enable_logs) {
-				$fp = fopen( "./log_send_series.log", "a+" );
-				fwrite($fp, 'Signature is not correct'."\r\n");
-				fclose($fp);
-			}
+			$this->log("Signature is not correct", 'sendSeries():');
 			return array('error' => 'Signature is not correct');
 		}
 	/*
@@ -1133,18 +1221,10 @@ class OneCGateway extends Controller{
 	* @return mixed
 	*/
 	public function sendPriceAndQuantity($args, $signature) {
-		if ($this->enable_logs) {
-			file_put_contents(__DIR__.'/log_send_price.log', var_export($args, true)."\r\n", FILE_APPEND);
-			/*$fp = fopen( "./log_send_price.log", "a+" );
-			fwrite($fp, var_export($args, true)."\r\n");
-			fclose($fp);*/
-		}
+		$this->log($args, 'sendPriceAndQuantity(): $args', "send_price_and_quantity_data.log");
+
 		if (!$this->_validateSignature($signature)) {
-			if ($this->enable_logs) {
-				$fp = fopen( "./log_send_price.log", "a+" );
-				fwrite($fp, 'Signature is not correct'."\r\n");
-				fclose($fp);
-			}
+			$this->log("Signature is not correct", 'sendPriceAndQuantity():');
 			return array('error' => 'Signature is not correct');
 		}
 
@@ -1178,24 +1258,17 @@ class OneCGateway extends Controller{
 
 		return array('error' => '');
 	}
-		/**
-	* @param mixed $args
-	* @param string $signature
-	* @return mixed
-	*/
+
+	/**
+	 * @param mixed $args
+	 * @param string $signature
+	 * @return mixed
+	 */
 	public function editCustomerStatus($args, $signature) {
-		if ($this->enable_logs) {
-			$fp = fopen( "./log_edit_customer.log", "a+" );
-			fwrite($fp, var_export($args, true)."\r\n");
-			fclose($fp);
-		}
+		$this->log($args, 'editCustomerStatus(): $args', "edit_customer_data.log");
 
 		if (!$this->_validateSignature($signature)) {
-			if ($this->enable_logs) {
-				$fp = fopen( "./log_edit_customer.log", "a+" );
-				fwrite($fp, 'Signature is not correct'."\r\n");
-				fclose($fp);
-			}
+			$this->log("Signature is not correct", 'editCustomerStatus():');
 			return array('error' => 'Signature is not correct');
 		}
 
@@ -1218,23 +1291,15 @@ class OneCGateway extends Controller{
 	}
 
 	/**
-	* @param mixed $args
-	* @param string $signature
-	* @return mixed
-	*/
+	 * @param mixed $args
+	 * @param string $signature
+	 * @return mixed
+	 */
 	public function setOrderLoaded($args, $signature) {
-		if ($this->enable_logs) {
-			$fp = fopen( "./log_set_order_loaded.log", "a+" );
-			fwrite($fp, var_export($args, true)."\r\n");
-			fclose($fp);
-		}
+		$this->log($args, 'setOrderLoaded(): $args', "edit_order_data.log");
 
 		if (!$this->_validateSignature($signature)) {
-			if ($this->enable_logs) {
-				$fp = fopen( "./log_set_order_loaded.log", "a+" );
-				fwrite($fp, 'Signature is not correct'."\r\n");
-				fclose($fp);
-			}
+			$this->log("Signature is not correct", 'setOrderLoaded():');
 			return array('error' => 'Signature is not correct');
 		}
 
@@ -1256,23 +1321,15 @@ class OneCGateway extends Controller{
 	}
 
 	/**
-	* @param mixed $args
-	* @param string $signature
-	* @return mixed
-	*/
+	 * @param mixed $args
+	 * @param string $signature
+	 * @return mixed
+	 */
 	public function editOrderStatus($args, $signature) {
-		if ($this->enable_logs) {
-			$fp = fopen( "./log_edit_order_status.log", "a+" );
-			fwrite($fp, var_export($args, true)."\r\n");
-			fclose($fp);
-		}
+		$this->log($args, 'editOrderStatus(): $args', "edit_order_data.log");
 
 		if (!$this->_validateSignature($signature)) {
-			if ($this->enable_logs) {
-				$fp = fopen( "./log_edit_order_status.log", "a+" );
-				fwrite($fp, 'Signature is not correct'."\r\n");
-				fclose($fp);
-			}
+			$this->log("Signature is not correct", 'editOrderStatus():');
 			return array('error' => 'Signature is not correct');
 		}
 
@@ -1286,7 +1343,7 @@ class OneCGateway extends Controller{
 			foreach ($orders as $order) {
 				if ($order) {
 					$order = (array)$order;
-					$db->query("update `" . DB_PREFIX . "order` set order_status_id = " . (int)$order['status_id'] . "  where order_id = " . (int)$order['order_id'] . ";");
+					$db->query("update `" . DB_PREFIX . "order` set order_status_id = " . (int)$order['status_id'] . " where order_id = " . (int)$order['order_id'] . ";");
 				}
 			}
 		}
@@ -1295,25 +1352,17 @@ class OneCGateway extends Controller{
 	}
 
 	/**
-	* @param mixed $args
-	* @param string $signature
-	* @return mixed
-	*/
+	 * @param mixed $args
+	 * @param string $signature
+	 * @return mixed
+	 */
 	public function editOrder($args, $signature) {
+		$this->log($args, 'editOrder(): $args', "edit_order_data.log");
+
 		// NOTICE: rewards and taxes are not realized
 
-		if ($this->enable_logs) {
-			$fp = fopen( "./log_edit_order.log", "a+" );
-			fwrite($fp, var_export($args, true)."\r\n");
-			fclose($fp);
-		}
-
 		if (!$this->_validateSignature($signature)) {
-			if ($this->enable_logs) {
-				$fp = fopen( "./log_edit_order.log", "a+" );
-				fwrite($fp, 'Signature is not correct'."\r\n");
-				fclose($fp);
-			}
+			$this->log("Signature is not correct", 'editOrder():');
 			return array('error' => 'Signature is not correct');
 		}
 
@@ -1321,7 +1370,7 @@ class OneCGateway extends Controller{
 		$this->load->model('catalog/product');
 		$this->load->model('extension/module/exchange_1c');
 
-		$lang = $this->_getLanguageId('ru');
+		$lang = $this->_getLanguageId($this->language_default);
 
 		$comment = 'M-IT: Exchange 1C' . "\r\n";
 
@@ -1395,7 +1444,7 @@ class OneCGateway extends Controller{
 					foreach ($order_total as $total) {
 						if ($total['code'] == 'sub_total') {
 							$total['value'] = $sub_total_value;
-							$total['text'] = $this->currency->format($sub_total_value);
+							$total['text'] = $this->currency->format($sub_total_value, $this->config->get('config_currency'));
 						} elseif ($total['code'] == 'total') {
 							$total_total = $total;
 						}
@@ -1407,7 +1456,7 @@ class OneCGateway extends Controller{
 					}
 					if ($total_total) {
 						$total_total['value'] = $total_total_value;
-						$total_total['text'] = $this->currency->format($total_total_value);
+						$total_total['text'] = $this->currency->format($total_total_value, $this->config->get('config_currency'));
 						$data['order_total'][] = $total_total;
 					}
 
@@ -1429,20 +1478,16 @@ class OneCGateway extends Controller{
 	}
 
 	/**
-	* @param string $signature
-	* @return mixed
-	*/
+	 * @param string $signature
+	 * @return mixed
+	 */
 	public function getOrderStatuses($signature) {
 		if (!$this->_validateSignature($signature)) {
-			if ($this->enable_logs) {
-				$fp = fopen( "./log_get_order_statuses.log", "a+" );
-				fwrite($fp, 'Signature is not correct'."\r\n");
-				fclose($fp);
-			}
+			$this->log("Signature is not correct", 'getOrderStatuses():');
 			return array('error' => 'Signature is not correct');
 		}
 
-		$lang = $this->_getLanguageId('ru');
+		$lang = $this->_getLanguageId($this->language_default);
 
 		$db = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
 		$rg = new Registry();
@@ -1450,25 +1495,18 @@ class OneCGateway extends Controller{
 		$rg->set('db', $db);
 		$query = $db->query("select order_status_id as status_id, name from `" . DB_PREFIX . "order_status` where language_id = $lang;");
 
-		if ($this->enable_logs) {
-			$fp = fopen( "./log_get_order_statuses.log", "a+" );
-			fwrite($fp, var_export($query->rows, true)."\r\n");
-			fclose($fp);
-		}
+		$this->log($query->rows, 'getOrderStatuses(): $query->rows', "get_order_statuses_data.log");
 
 		return array('error' => '', 'status' => $query->rows);
 	}
-		/**
-	* @param string $signature
-	* @return mixed
-	*/
+
+	/**
+	 * @param string $signature
+	 * @return mixed
+	 */
 	public function getShipping($signature) {
 		if (!$this->_validateSignature($signature)) {
-			if ($this->enable_logs) {
-				$fp = fopen( "./log_get_shipping.log", "a+" );
-				fwrite($fp, 'Signature is not correct'."\r\n");
-				fclose($fp);
-			}
+			$this->log("Signature is not correct", 'getShipping():');
 			return array('error' => 'Signature is not correct');
 		}
 
@@ -1488,26 +1526,18 @@ class OneCGateway extends Controller{
 			);
 		}
 
-		if ($this->enable_logs) {
-			$fp = fopen( "./log_get_shipping.log", "a+" );
-			fwrite($fp, var_export($result, true)."\r\n");
-			fclose($fp);
-		}
+		$this->log($result, 'getShipping(): $result', "get_shipping_data.log");
 
 		return array('error' => '', 'shipping' => $result);
 	}
 
 	/**
-	* @param string $signature
-	* @return mixed
-	*/
+	 * @param string $signature
+	 * @return mixed
+	 */
 	public function getPayment($signature) {
 		if (!$this->_validateSignature($signature)) {
-			if ($this->enable_logs) {
-				$fp = fopen( "./log_get_payment.log", "a+" );
-				fwrite($fp, 'Signature is not correct'."\r\n");
-				fclose($fp);
-			}
+			$this->log("Signature is not correct", 'getPayment():');
 			return array('error' => 'Signature is not correct');
 		}
 
@@ -1527,19 +1557,15 @@ class OneCGateway extends Controller{
 			);
 		}
 
-		if ($this->enable_logs) {
-			$fp = fopen( "./log_get_payment.log", "a+" );
-			fwrite($fp, var_export($result, true)."\r\n");
-			fclose($fp);
-		}
+		$this->log($result, 'getPayment(): $result', "get_payment_data.log");
 
 		return array('error' => '', 'payment' => $result);
 	}
 
 	/**
-	* @param string $keyword
-	* @return string
-	*/
+	 * @param string $keyword
+	 * @return string
+	 */
 	private function _makeUniqueKeyword($keyword, $query_begin, $current_id) {
 		$this->load->model('extension/module/exchange_1c');
 		$keywords = $this->model_extension_module_exchange_1c->getAllKeywords($query_begin, $keyword, $current_id);
@@ -1555,9 +1581,9 @@ class OneCGateway extends Controller{
 	}
 
 	/**
-	* @param string $string
-	* @return string
-	*/
+	 * @param string $string
+	 * @return string
+	 */
 	private function _rusToTranslit($string) {
 		$converter = array(
 			'а' => 'a',   'б' => 'b',   'в' => 'v',
@@ -1589,17 +1615,19 @@ class OneCGateway extends Controller{
 	}
 
 	/**
-	* @param string $str
-	* @return string
-	*/
+	 * @param string $str
+	 * @return string
+	 */
 	private function _transliterateString($str, $to_url = true) {
 		$str = $this->_rusToTranslit($str);
+
 		if ($to_url) {
 			$str = strtolower($str);
 			$preg_str = '~[^-a-z0-9_]+~u';
 		} else {
 			$preg_str = '~[^-a-zA-Z0-9_ ]+~u';
 		}
+
 		$str = preg_replace($preg_str, '-', $str);
 		$str = $this->_removeDuplicates('--', '-', $str);
 		$str = trim($str, "-");
@@ -1608,12 +1636,13 @@ class OneCGateway extends Controller{
 	}
 
 	/**
-	* @param string $str
-	* @return string
-	*/
+	 * @param string $str
+	 * @return string
+	 */
 	private function _removeDuplicates($search, $replace, $subject) {
 		$i = 0;
 		$pos = strpos($subject, $search);
+
 		while ($pos !== false) {
 			$subject = str_replace($search, $replace, $subject);
 			$pos = strpos($subject, $search);
@@ -1622,19 +1651,17 @@ class OneCGateway extends Controller{
 				die('_removeDuplicates() loop error');
 			}
 		}
+
 		return $subject;
 	}
-		/**
-	* @param string $signature
-	* @return mixed
-	*/
+
+	/**
+	 * @param string $signature
+	 * @return mixed
+	 */
 	public function getNewCustomer($signature) {
 		if (!$this->_validateSignature($signature)) {
-			if ($this->enable_logs) {
-				$fp = fopen( "./log_get_new_customer.log", "a+" );
-				fwrite($fp, 'Signature is not correct'."\r\n");
-				fclose($fp);
-			}
+			$this->log("Signature is not correct", 'getNewCustomer():');
 			return array('error' => 'Signature is not correct');
 		}
 
@@ -1642,28 +1669,20 @@ class OneCGateway extends Controller{
 		$rg = new Registry();
 		$buf = array();
 		$rg->set( 'db', $db);
-		$q_res = $db->query("select t1.customer_id, t1.firstname, t1.lastname, t1.email, t1.telephone, t1.status, t2.company, t2.address_1, t2.address_2, t2.city, t2.postcode from " . DB_PREFIX . "customer t1 left join " . DB_PREFIX . "address t2 using( address_id ) where is_new > 0;"  );
+		$q_res = $db->query("select t1.customer_id, t1.firstname, t1.lastname, t1.email, t1.telephone, t1.status, t2.company, t2.address_1, t2.address_2, t2.city, t2.postcode from " . DB_PREFIX . "customer t1 left join " . DB_PREFIX . "address t2 using( address_id ) where is_new > 0;");
 
-		if ($this->enable_logs) {
-			$fp = fopen( "./log_get_new_customer.log", "a+" );
-			fwrite($fp, var_export($q_res->rows, true)."\r\n");
-			fclose($fp);
-		}
+		$this->log($q_res->rows, 'getNewCustomer(): $q_res->rows', "get_new_customer_data.log");
 
 		return array('error' => '', 'customer' => $q_res->rows);
 	}
 
 	/**
-	* @param string $signature
-	* @return mixed
-	*/
+	 * @param string $signature
+	 * @return mixed
+	 */
 	public function getNewOrder($signature) {
 		if (!$this->_validateSignature($signature)) {
-			if ($this->enable_logs) {
-				$fp = fopen( "./log_get_new_order.log", "a+" );
-				fwrite($fp, 'Signature is not correct'."\r\n");
-				fclose($fp);
-			}
+			$this->log("Signature is not correct", 'getNewOrder():');
 			return array('error' => 'Signature is not correct');
 		}
 
@@ -1682,55 +1701,46 @@ class OneCGateway extends Controller{
 		$result = $query->rows;
 		foreach ($result as $k =>$v) {
 			$options_query = $db->query("select oo.*, pove.exchange_id from " . DB_PREFIX . "order_option oo
-										 	left join " . DB_PREFIX . "product_option_value_exchange pove
-										 		on oo.product_option_id = pove.product_option_id
-										 		and oo.product_option_value_id = pove.product_option_value_id
-										 where oo.order_id = '" . (int)$v['order_id'] . "' and oo.order_product_id = '" . (int)$v['order_product_id'] . "'");
+							left join " . DB_PREFIX . "product_option_value_exchange pove
+							on oo.product_option_id = pove.product_option_id
+							and oo.product_option_value_id = pove.product_option_value_id
+							where oo.order_id = '" . (int)$v['order_id'] . "' and oo.order_product_id = '" . (int)$v['order_product_id'] . "'
+						");
+
 			$options = array();
 			foreach ($options_query->rows as $option) {
 				if ($option['type'] != 'file') {
-					//$options[] =  $option['exchange_id'];
-					$options[] =  $option['name'];
-					$options[] =  $option['value'];
+					//$options[] = $option['exchange_id'];
+					$options[] = $option['name'];
+					$options[] = $option['value'];
 				}
 			}
+
 			$result[$k]['options'] = implode(';', $options);
 		}
 
-		if ($this->enable_logs) {
-			$fp = fopen( "./log_get_new_order.log", "a+" );
-			fwrite($fp, var_export($result, true)."\r\n");
-			fclose($fp);
-		}
+		$this->log($result, 'getNewOrder(): $result', "get_new_order_data.log");
 
 		return array('error' => '', 'order' => $result);
 	}
 
 	/**
-	* @return string
-	*/
-	public function getInfoServer() {
-
-		$fp = fopen( "./log_set_message.log", "r" );
-		$contents = fread($fp, filesize("./log_set_message.log"));
-
-		return "SERVER_NAME: ".$_SERVER['SERVER_NAME']."\r\n"
-				."SERVER_ADDR: ".$_SERVER["SERVER_ADDR"]."\r\n"
-				."log_set_message.log: "."\r\n".$contents;
-
+	 * @param mixed $data
+	 * @param string $title
+	 * @param string $filename
+ 	 */
+	public function log($data, $title = null, $filename = "main.log") {
+		if ($this->enable_logs) {
+		//if ($this->config->get('uim_debug')) {
+			//$this->log->write('Express debug (' . $title . '): ' . json_encode($data));
+			file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . 'Logs' . DIRECTORY_SEPARATOR . $filename,
+					 "[" . date('Y-m-d G:i:s') . "]" . ' - ' . $title . "\r\n",
+					 FILE_APPEND);
+			file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . 'Logs' . DIRECTORY_SEPARATOR . $filename,
+					 print_r($data, true) . "\r\n\r\n",
+					 FILE_APPEND);
+		}
 	}
-
-	/**
-   * @param string
-   */
-	public function setMessage($message) {
-
-		$fp = fopen( "./log_set_message.log", "a+" );
-		fwrite($fp, $message."\r\n");
-		fclose($fp);
-	}
-
-
 }
 
 $server = new OneC_Wsdl_Server();

@@ -1,0 +1,8 @@
+RewriteEngine off
+
+#php_value display_errors 1
+#php_value display_startup_errors 1
+#php_value error_reporting E_ALL
+
+#php_value log_errors "On"
+#php_value error_log "/full/path/1cgw/Logs/error.log"

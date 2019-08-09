@@ -1,13 +1,14 @@
 <?php
 // Version
-define('VERSION', '0.2.0');
+define('VERSION', '1.3.5');
 
 // Configuration
 require_once('../admin/config.php');
 
-
 // Additional configs
-//require_once(DIR_CONFIG  . 'config_tuning.php');
+//require_once(DIR_CONFIG  . 'config_additional.php');
+
+
 // Startup
 require_once(DIR_SYSTEM . 'startup.php');
 
@@ -38,7 +39,6 @@ $query = $db->query("SELECT * FROM " . DB_PREFIX . "setting");
 foreach ($query->rows as $setting) {
 	$config->set($setting['key'], $setting['value']);
 }
-
 
 // Log
 $log = new Log($config->get('config_error_filename'));
@@ -97,10 +97,6 @@ $query = $db->query("SELECT * FROM " . DB_PREFIX . "event");
 
 foreach ($query->rows as $result) {
 	$event->register($result['trigger'], new Action($result['action']));
-}
-
-function debug($data){
-	echo '<pre>'.print_r($data, true).'</pre>';exit;
 }
 
 ?>
