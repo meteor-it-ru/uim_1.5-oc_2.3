@@ -846,7 +846,7 @@ class OneCGateway extends Controller{
 	}
 
 	/**
-	 * @param
+	 * @param integer $product_id
 	 * @param
 	 * @param
 	 * @return mixed
@@ -917,7 +917,7 @@ class OneCGateway extends Controller{
 					$opt_name = $this->_transliterateString($option_name, false);
 
 					$find1 = $db->query("select option_id from " . DB_PREFIX . "option_description where name = '$opt_name'");
-					if ($find1->num_rows == 0){
+					if ($find1->num_rows == 0) {
 						$db->query("insert into `" . DB_PREFIX . "option` (`type`, `sort_order`) values ('$type', $option_order);");
 						$option_id = $db->getLastId();
 						foreach ($languages as $k => $v) {
