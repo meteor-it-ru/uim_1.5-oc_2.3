@@ -77,16 +77,7 @@
 		</operation>
 
 		<operation error="skip">
-			<search index="0"><![CDATA[$this->db->query("DELETE FROM " . DB_PREFIX . "product_option_value WHERE product_id = '" . (int)$product_id . "'");]]></search>
-			<add position="after"><![CDATA[
-			//BOF UIM_1C
-			$this->db->query("DELETE FROM " . DB_PREFIX . "product_option_value_exchange WHERE product_id = '" . (int)$product_id . "'");
-			//EOF UIM_1C
-			]]></add>
-		</operation>
-
-		<operation error="skip">
-			<search index="1"><![CDATA[$this->db->query("DELETE FROM " . DB_PREFIX . "product_option WHERE product_id = '" . (int)$product_id . "'");]]></search>
+			<search index="1"><![CDATA[$this->db->query("DELETE FROM " . DB_PREFIX . "product_option_value WHERE product_id = '" . (int)$product_id . "'");]]></search>
 			<add position="after"><![CDATA[
 			//BOF UIM_1C
 			$this->db->query("DELETE FROM " . DB_PREFIX . "product_option_value_exchange WHERE product_id = '" . (int)$product_id . "'");
