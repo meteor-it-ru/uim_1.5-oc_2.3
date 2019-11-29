@@ -332,28 +332,6 @@ class OneCGateway extends Controller{
 	}
 
 	/**
-	 * @param 
-	 * @param 
-	 * @param 
-	 * @param 
-	 */
-	private function _saveCategoriesTree($categories, $parent_id, $languages, $lang) {
-		foreach ($categories as $category) {
-			if ($category) {
-				$category = (array)$category;
-				if (!$this->_getCategory((int)$category['id'])) {
-					$category['id'] = '0';
-				}
-				$category['parent_id'] = $parent_id;
-				$category_id = $this->_saveCategory($category, $languages, $lang);
-				if (isset($category['category']) && $category['category'] && is_array($category['category'])) {
-					$this->_saveCategoriesTree($category['category'], $category_id, $languages, $lang);
-				}
-			}
-		}
-	}
-
-	/**
 	 * @param integer $category_id
 	 * @return string
 	 */
@@ -455,6 +433,28 @@ class OneCGateway extends Controller{
 	}
 
 	/**
+	 * @param 
+	 * @param 
+	 * @param 
+	 * @param 
+	 */
+	private function _saveCategoriesTree($categories, $parent_id, $languages, $lang) {
+		foreach ($categories as $category) {
+			if ($category) {
+				$category = (array)$category;
+				if (!$this->_getCategory((int)$category['id'])) {
+					$category['id'] = '0';
+				}
+				$category['parent_id'] = $parent_id;
+				$category_id = $this->_saveCategory($category, $languages, $lang);
+				if (isset($category['category']) && $category['category'] && is_array($category['category'])) {
+					$this->_saveCategoriesTree($category['category'], $category_id, $languages, $lang);
+				}
+			}
+		}
+	}
+
+	/**
 	* @param mixed $args
 	* @param string $signature
 	* @return mixed
@@ -505,57 +505,6 @@ class OneCGateway extends Controller{
 	 */
 	private function _getProduct($product_id) {
 		return $this->model_catalog_product->getProduct($product_id);
-	}
-
-	/**
-	 * @param mixed $images
-	 * @return array
-	 */
-	private function _productImages($images) {
-		$buffer = array();
-		$img_dir = $this->image_dir . '/product/';
-		if (isset($images['image']) && is_array($images['image'])) {
-			$last = array_pop($images['image']);
-			foreach($images['image'] as $k => $v) {
-				if ($images['dir_image'][$k]) {
-					if ($v) {
-						$this->_saveImage($img_dir . $images['dir_image'][$k], $v);
-					}
-
-					$buffer[] = array(
-						'image' => $img_dir . $images['dir_image'][$k],
-						'sort_order' => $k
-					);
-				}
-			}
-		}
-		return $buffer;
-	}
-
-	/**
-	 * @param
-	 * @param
-	 * @return
-	 */
-	private function _saveImage($name, $data) {
-		$this->log($name, '_saveImage(): $name');
-		$this->log($data, '_saveImage(): $data');
-
-		if (!is_dir(dirname(DIR_IMAGE . $name))) {
-			mkdir(dirname(DIR_IMAGE . $name), 0755, true);
-		}
-
-		if ($fp = fopen(DIR_IMAGE . $name, "wb")) {
-			$wlen = 0;
-			for ($written = 0; $written < strlen(base64_decode($data)); $written += $wlen ) {
-				$wlen = fwrite($fp, substr(base64_decode($data), $written));
-				if ($wlen === false) {
-					return 0;
-				}
-			}
-			fclose($fp);
-			chmod(DIR_IMAGE . $name, 0644);
-		}
 	}
 
 	/**
@@ -736,6 +685,57 @@ class OneCGateway extends Controller{
 	}
 
 	/**
+	 * @param mixed $images
+	 * @return array
+	 */
+	private function _productImages($images) {
+		$buffer = array();
+		$img_dir = $this->image_dir . '/product/';
+		if (isset($images['image']) && is_array($images['image'])) {
+			$last = array_pop($images['image']);
+			foreach($images['image'] as $k => $v) {
+				if ($images['dir_image'][$k]) {
+					if ($v) {
+						$this->_saveImage($img_dir . $images['dir_image'][$k], $v);
+					}
+
+					$buffer[] = array(
+						'image' => $img_dir . $images['dir_image'][$k],
+						'sort_order' => $k
+					);
+				}
+			}
+		}
+		return $buffer;
+	}
+
+	/**
+	 * @param
+	 * @param
+	 * @return
+	 */
+	private function _saveImage($name, $data) {
+		$this->log($name, '_saveImage(): $name');
+		$this->log($data, '_saveImage(): $data');
+
+		if (!is_dir(dirname(DIR_IMAGE . $name))) {
+			mkdir(dirname(DIR_IMAGE . $name), 0755, true);
+		}
+
+		if ($fp = fopen(DIR_IMAGE . $name, "wb")) {
+			$wlen = 0;
+			for ($written = 0; $written < strlen(base64_decode($data)); $written += $wlen ) {
+				$wlen = fwrite($fp, substr(base64_decode($data), $written));
+				if ($wlen === false) {
+					return 0;
+				}
+			}
+			fclose($fp);
+			chmod(DIR_IMAGE . $name, 0644);
+		}
+	}
+
+	/**
 	 * @return integer
 	 */
 	private function _addGroupAttribute() {
@@ -802,7 +802,8 @@ class OneCGateway extends Controller{
 
 			$db = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
 			$rg = new Registry();
-			$rg->set( 'db', $db);
+			$rg->set('db', $db);
+
 			$find = $db->query("select attribute_id from " . DB_PREFIX ."attribute_description where name='$attribute_name' and language_id=$lang limit 0,1");
 			if ($find->num_rows == 0) {
 
@@ -1321,6 +1322,30 @@ class OneCGateway extends Controller{
 	}
 
 	/**
+	 * @param string $signature
+	 * @return mixed
+	 */
+	public function getOrderStatuses($signature) {
+		if (!$this->_validateSignature($signature)) {
+			$this->log("Signature is not correct", 'getOrderStatuses():');
+			return array('error' => 'Signature is not correct');
+		}
+
+		$lang = $this->_getLanguageId($this->language_default);
+
+		$db = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
+		$rg = new Registry();
+		$buf = array();
+		$rg->set('db', $db);
+
+		$query = $db->query("select order_status_id as status_id, name from `" . DB_PREFIX . "order_status` where language_id = $lang;");
+
+		$this->log($query->rows, 'getOrderStatuses(): $query->rows', "get_order_statuses_data.log");
+
+		return array('error' => '', 'status' => $query->rows);
+	}
+
+	/**
 	 * @param mixed $args
 	 * @param string $signature
 	 * @return mixed
@@ -1481,29 +1506,6 @@ class OneCGateway extends Controller{
 	 * @param string $signature
 	 * @return mixed
 	 */
-	public function getOrderStatuses($signature) {
-		if (!$this->_validateSignature($signature)) {
-			$this->log("Signature is not correct", 'getOrderStatuses():');
-			return array('error' => 'Signature is not correct');
-		}
-
-		$lang = $this->_getLanguageId($this->language_default);
-
-		$db = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
-		$rg = new Registry();
-		$buf = array();
-		$rg->set('db', $db);
-		$query = $db->query("select order_status_id as status_id, name from `" . DB_PREFIX . "order_status` where language_id = $lang;");
-
-		$this->log($query->rows, 'getOrderStatuses(): $query->rows', "get_order_statuses_data.log");
-
-		return array('error' => '', 'status' => $query->rows);
-	}
-
-	/**
-	 * @param string $signature
-	 * @return mixed
-	 */
 	public function getShipping($signature) {
 		if (!$this->_validateSignature($signature)) {
 			$this->log("Signature is not correct", 'getShipping():');
@@ -1514,6 +1516,7 @@ class OneCGateway extends Controller{
 		$rg = new Registry();
 		$buf = array();
 		$rg->set('db', $db);
+
 		$query = $db->query("select * from `" . DB_PREFIX . "extension` where type = 'shipping';");
 
 		$result = array();
@@ -1545,6 +1548,7 @@ class OneCGateway extends Controller{
 		$rg = new Registry();
 		$buf = array();
 		$rg->set('db', $db);
+
 		$query = $db->query("select * from `" . DB_PREFIX . "extension` where type = 'payment';");
 
 		$result = array();
@@ -1668,12 +1672,13 @@ class OneCGateway extends Controller{
 		$db = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
 		$rg = new Registry();
 		$buf = array();
-		$rg->set( 'db', $db);
-		$q_res = $db->query("select t1.customer_id, t1.firstname, t1.lastname, t1.email, t1.telephone, t1.status, t2.company, t2.address_1, t2.address_2, t2.city, t2.postcode from " . DB_PREFIX . "customer t1 left join " . DB_PREFIX . "address t2 using( address_id ) where is_new > 0;");
+		$rg->set('db', $db);
 
-		$this->log($q_res->rows, 'getNewCustomer(): $q_res->rows', "get_new_customer_data.log");
+		$query = $db->query("select t1.customer_id, t1.firstname, t1.lastname, t1.email, t1.telephone, t1.status, t2.company, t2.address_1, t2.address_2, t2.city, t2.postcode from " . DB_PREFIX . "customer t1 left join " . DB_PREFIX . "address t2 using( address_id ) where is_new > 0;");
 
-		return array('error' => '', 'customer' => $q_res->rows);
+		$this->log($query->rows, 'getNewCustomer(): $query->rows', "get_new_customer_data.log");
+
+		return array('error' => '', 'customer' => $query->rows);
 	}
 
 	/**
@@ -1689,7 +1694,8 @@ class OneCGateway extends Controller{
 		$db = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
 		$rg = new Registry();
 		$buf = array();
-		$rg->set( 'db', $db);
+		$rg->set('db', $db);
+
 		$query = $db->query("
 			select o.*, op.*, o.total as order_total, ot.value as shipping_price, ot2.value as coupon_price from `" . DB_PREFIX . "order` o
 			left join `" . DB_PREFIX . "order_product` op on o.order_id = op.order_id
