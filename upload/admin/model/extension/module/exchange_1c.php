@@ -4,21 +4,25 @@ class ModelExtensionModuleExchange1c extends Model {
 	public function getKeywords($query_begin, $current_id = 0) {
 		$query = $this->db->query("SELECT keyword FROM `" . DB_PREFIX . "url_alias` WHERE query like'" . $query_begin . "=%' AND query <> '" . $query_begin . "=" . $current_id . "'");
 		$result = array();
+		
 		foreach ($query->rows as $row) {
 			$result[] = $row['keyword'];
 		}
+		
 		return $result;
 	}
-	
+
 	public function getAllKeywords($query_begin, $keyword, $current_id = 0) {
 		$query = $this->db->query("SELECT keyword FROM `" . DB_PREFIX . "url_alias` WHERE keyword like'" . $this->db->escape($keyword) . "%' AND query <> '" . $query_begin . "=" . $current_id . "'");
 		$result = array();
+		
 		foreach ($query->rows as $row) {
 			$result[] = $row['keyword'];
 		}
+		
 		return $result;
 	}
-	
+
 	public function getManufacturerByName($name) {
 		$query = $this->db->query("SELECT DISTINCT * FROM " . DB_PREFIX . "manufacturer WHERE name = '" . $this->db->escape($name) . "'");
 		
@@ -56,16 +60,16 @@ class ModelExtensionModuleExchange1c extends Model {
 
 	public function getProductOptionAndValue($product_id, $product_option_value_id, $language_id) {
 		$query = $this->db->query("SELECT o.type as type, od.name as name, ovd.name as value, po.product_option_id as product_option_id
-			FROM `" . DB_PREFIX . "option` o 
-			LEFT JOIN " . DB_PREFIX . "option_description od ON (o.option_id = od.option_id) 
-			LEFT JOIN " . DB_PREFIX . "option_value ov ON (o.option_id = ov.option_id) 
-			LEFT JOIN " . DB_PREFIX . "option_value_description ovd ON (ov.option_value_id = ovd.option_value_id) 
-			LEFT JOIN " . DB_PREFIX . "product_option po ON (o.option_id = po.option_id) 
-			LEFT JOIN " . DB_PREFIX . "product_option_value pov ON (ov.option_value_id = pov.option_value_id) 
-			WHERE po.product_id = '" . (int)$product_id . "' 
-			AND pov.product_option_value_id = '" . (int)$product_option_value_id . "' 
-			AND od.language_id = '" . (int)$language_id . "'
-			AND ovd.language_id = '" . (int)$language_id . "'");
+				FROM `" . DB_PREFIX . "option` o 
+				LEFT JOIN " . DB_PREFIX . "option_description od ON (o.option_id = od.option_id) 
+				LEFT JOIN " . DB_PREFIX . "option_value ov ON (o.option_id = ov.option_id) 
+				LEFT JOIN " . DB_PREFIX . "option_value_description ovd ON (ov.option_value_id = ovd.option_value_id) 
+				LEFT JOIN " . DB_PREFIX . "product_option po ON (o.option_id = po.option_id) 
+				LEFT JOIN " . DB_PREFIX . "product_option_value pov ON (ov.option_value_id = pov.option_value_id) 
+				WHERE po.product_id = '" . (int)$product_id . "' 
+				AND pov.product_option_value_id = '" . (int)$product_option_value_id . "' 
+				AND od.language_id = '" . (int)$language_id . "'
+				AND ovd.language_id = '" . (int)$language_id . "'");
 		
 		return $query->row;
 	}
@@ -79,15 +83,24 @@ class ModelExtensionModuleExchange1c extends Model {
 	public function getProductOptionValueExchange($product_id, $exchange_id = false) {
 		$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "product_option_value_exchange WHERE product_id = " . (int)$product_id . ($exchange_id ? " AND exchange_id = '" . $this->db->escape($exchange_id) . "'" : ""));
 		$result = array();
+		
 		foreach ($query->rows as $row) {
 			$result[$row['exchange_id']] = $row;
 		}
+		
 		return $result;
 	}
 
-	public function saveProductOptionValueExchange($product_id, $option_id, $option_value_id, $product_option_id, $product_option_value_id, $exchange_id) {
-		$this->db->query("INSERT INTO " . DB_PREFIX . "product_option_value_exchange (`product_id`, `option_id`, `option_value_id`, `product_option_id`, `product_option_value_id`, `exchange_id`) 
-			VALUES (" . (int)$product_id . ", " . (int)$option_id . ", " . (int)$option_value_id . ", " . (int)$product_option_id . ", " . (int)$product_option_value_id . ", '" . $this->db->escape($exchange_id) . "')");
+	public function saveProductOptionValueExchange($product_id, $option_id, $option_value_id, $product_option_id, $product_option_value_id, $exchange_id, $product_option_value_exchange_id = null) {
+		$sql = "INSERT INTO " . DB_PREFIX . "product_option_value_exchange (`product_id`, `option_id`, `option_value_id`, `product_option_id`, `product_option_value_id`, `exchange_id`, `product_option_value_exchange_id`) 
+			VALUES (" . (int)$product_id . ", " . (int)$option_id . ", " . (int)$option_value_id . ", " . (int)$product_option_id . ", " . (int)$product_option_value_id . ", '" . $this->db->escape($exchange_id) . "'";
+		
+		// If "product_option_value_exchange_id" already exists, do not create a new identifier
+		$sql .= $product_option_value_exchange_id ? ", " . (int)$product_option_value_exchange_id : ", NULL";
+		
+		$sql .= ")";
+		
+		$this->db->query($sql);
 	}
-	
+
 }

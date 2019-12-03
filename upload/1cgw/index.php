@@ -1,4 +1,6 @@
 <?php
+$time_start = microtime(true);
+
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors','on');
@@ -11,16 +13,16 @@ require_once 'init.php';
 require_once 'OneC/Wsdl/Server.php';
 require_once 'OneC/Wsdl/Client.php';
 
-class OneCGateway extends Controller{
+class OneCGateway extends Controller {
 
 	private $enable_logs = 0;
 	private $image_dir = 'catalog/export/';
 
 	public  $category_ids = array();
 	public  $product_ids = array();
-	public  $product_option_ids = array();
+	//public  $product_option_ids = array();
 
-	private $_model = null;
+	//private $_model = null;
 	private $setting = array();
 	private $template_tags = array('[category_name]', '[all_category_name]', '[manufacturer_name]', '[product_name]', '[model_name]', '[price]');
 	private $all_category_sep = '|';
@@ -660,6 +662,10 @@ class OneCGateway extends Controller{
 			if ($product_id) {
 				$this->log("Вызов model_catalog_product->editProduct()", '_saveProduct():');
 
+				if (1) {
+					$non_1c_product_options = $this->_getNon1cProductOptions($product_id, $option_exchange);
+				}
+
 				$this->model_catalog_product->editProduct($product_id, $data);
 			} else {
 				$this->log("Вызов model_catalog_product->addProduct()", '_saveProduct():');
@@ -678,7 +684,10 @@ class OneCGateway extends Controller{
 
 		if ($product_id) {
 			$this->_saveProductAttributes($product_id, (array)$args['attributes'], $product_attributes);
+
 			$this->_saveProductOptions($product_id, (array)$args['options'], $option_exchange);
+
+			$this->_saveNon1cProductOptions($product_id, (array)$non_1c_product_options);
 		}
 
 		return $product_id;
@@ -848,11 +857,84 @@ class OneCGateway extends Controller{
 
 	/**
 	 * @param integer $product_id
-	 * @param
-	 * @param
+	 * @param mixed $option_exchange
+	 * @return mixed
+	 */
+	private function _getNon1cProductOptions($product_id, $option_exchange = null) {
+		$product_options = $this->model_catalog_product->getProductOptions($product_id);
+		$this->log($product_options, '_getNon1cProductOptions(): $product_options', "non_1c_product_options_data.log");
+
+		if (!$option_exchange) {
+			$option_exchange = $this->model_extension_module_exchange_1c->getProductOptionValueExchange($product_id);
+			$this->log($option_exchange, '_getNon1cProductOptions(): $option_exchange', "non_1c_product_options_data.log");
+		}
+
+		foreach ($product_options as $po_key => $product_option) {
+			$this->log('11111', '$product_options as $po_key => $product_option', "options-x.log");
+
+			foreach ($product_option['product_option_value'] as $pov_key => $product_option_value) {
+				$this->log('22222', '$product_option[product_option_value] as $pov_key => $product_option_value', "options-x.log");
+
+				foreach ($option_exchange as $option_exchange_data) {
+					$this->log('33333', '$option_exchange as $option_exchange_data', "options-x.log");
+
+					if ($option_exchange_data['product_option_value_id'] == $product_option_value['product_option_value_id']) {
+						$this->log('=====', "$po_key $pov_key", "options-x.log");
+
+						unset($product_options[$po_key]['product_option_value'][$pov_key]);
+
+						if (count($product_options[$po_key]['product_option_value']) == 0) {
+							unset($product_options[$po_key]);
+						}
+
+						break;
+					}
+				}
+			}
+		}
+
+		$this->log($product_options, '_getNon1cProductOptions(): $product_options (cleaned)', "non_1c_product_options_data.log");
+
+		return $product_options;
+	}
+
+	/**
+	 * @param integer $product_id
+	 * @param mixed $data
+	 * @return mixed
+	 */
+	private function _saveNon1cProductOptions($product_id, $data) {
+		if (count($data) > 0) {
+			foreach ($data as $product_option) {
+				if ($product_option['type'] == 'select' || $product_option['type'] == 'radio' || $product_option['type'] == 'checkbox' || $product_option['type'] == 'image') {
+					if (isset($product_option['product_option_value'])) {
+						$this->db->query("INSERT INTO " . DB_PREFIX . "product_option SET product_option_id = '" . (int)$product_option['product_option_id'] . "', product_id = '" . (int)$product_id . "', option_id = '" . (int)$product_option['option_id'] . "', required = '" . (int)$product_option['required'] . "'");
+
+						$product_option_id = $this->db->getLastId();
+
+						foreach ($product_option['product_option_value'] as $product_option_value) {
+							$this->db->query("INSERT INTO " . DB_PREFIX . "product_option_value SET product_option_value_id = '" . (int)$product_option_value['product_option_value_id'] . "', product_option_id = '" . (int)$product_option_id . "', product_id = '" . (int)$product_id . "', option_id = '" . (int)$product_option['option_id'] . "', option_value_id = '" . (int)$product_option_value['option_value_id'] . "', quantity = '" . (int)$product_option_value['quantity'] . "', subtract = '" . (int)$product_option_value['subtract'] . "', price = '" . (float)$product_option_value['price'] . "', price_prefix = '" . $this->db->escape($product_option_value['price_prefix']) . "', points = '" . (int)$product_option_value['points'] . "', points_prefix = '" . $this->db->escape($product_option_value['points_prefix']) . "', weight = '" . (float)$product_option_value['weight'] . "', weight_prefix = '" . $this->db->escape($product_option_value['weight_prefix']) . "'");
+						}
+					}
+				} else {
+					$this->db->query("INSERT INTO " . DB_PREFIX . "product_option SET product_option_id = '" . (int)$product_option['product_option_id'] . "', product_id = '" . (int)$product_id . "', option_id = '" . (int)$product_option['option_id'] . "', value = '" . $this->db->escape($product_option['value']) . "', required = '" . (int)$product_option['required'] . "'");
+				}
+			}
+		}
+	}
+
+	/**
+	 * @param integer $product_id
+	 * @param mixed $args
+	 * @param mixed $option_exchange
 	 * @return mixed
 	 */
 	private function _saveProductOptions($product_id, $args, $option_exchange) {
+		$this->log($product_id, "product_id: ", "save_product_options_data.log");
+		$this->log($args, "args: ", "save_product_options_data.log");
+		$this->log($option_exchange, "option_exchange: ", "save_product_options_data.log");
+
+
 		$db = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
 		$rg = new Registry();
 		$rg->set('db', $db);
@@ -1029,7 +1111,9 @@ class OneCGateway extends Controller{
 			}
 
 			// (5) save exchange data
-			$this->model_extension_module_exchange_1c->saveProductOptionValueExchange($product_id, $option_id, $option_value_id, $product_option_id, $product_option_value_id, $id_1c);
+			$product_option_value_exchange_id = isset($option_exchange[$id_1c]) ? $option_exchange[$id_1c]['product_option_value_exchange_id'] : null;
+			$this->model_extension_module_exchange_1c->saveProductOptionValueExchange($product_id, $option_id, $option_value_id, $product_option_id, $product_option_value_id, $id_1c, $product_option_value_exchange_id);
+
 			$data = array(
 				'option_id' => $option_id,
 				'option_value_id' => $option_value_id,
@@ -1038,8 +1122,11 @@ class OneCGateway extends Controller{
 				'option_name' => $option_name,
 				'option_value' => $option_value
 			);
+
 			$result[$key] = $data;
 		}
+
+		$this->log($result, '$result: ', "save_product_options_data.log");
 	}
 
 	/**
@@ -1753,4 +1840,14 @@ $server = new OneC_Wsdl_Server();
 $server->setService('OneCGateway');
 $server->handle();
 
+// Записываем в лог время выполнения скрипта и максимальное использование памяти
+if (0) {
+	$log_file = __DIR__ . DIRECTORY_SEPARATOR . 'Logs' . DIRECTORY_SEPARATOR . 'performance.log';
+	$peak_memory_usage = round(memory_get_peak_usage() / 1024 / 1024, 4);
+	$script_execution_time = round(microtime(true) - $time_start, 4);
+
+	file_put_contents($log_file, "[" . date('Y-m-d G:i:s') . "]\r\n", FILE_APPEND);
+	file_put_contents($log_file, "Пиковое использование памяти: " . $peak_memory_usage . " мб.\r\n", FILE_APPEND);
+	file_put_contents($log_file, "Время выполнения скрипта: " . $script_execution_time ." сек.\r\n\r\n", FILE_APPEND);
+}
 ?>
