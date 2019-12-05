@@ -970,6 +970,22 @@
 								</select></td>
 							</tr>
 						</table>
+						<h2><?php echo $entry_options; ?></h2>
+						<table class="form">
+							<tr>
+								<?php $only_1c_options = !isset($module_data[$store['store_id']]['exchange_1c_only_1c_options']) ? 1 : $module_data[$store['store_id']]['exchange_1c_only_1c_options']; ?>
+								<td><span data-toggle="tooltip" title="<?php echo $help_only_1c_options; ?>"><?php echo $entry_only_1c_options; ?></span></td>
+								<td><select name="module_data[<?php echo $store['store_id']; ?>][exchange_1c_only_1c_options]">
+									<?php if ($only_1c_options) { ?>
+										<option value="1" selected="selected"><?php echo $text_yes; ?></option>
+										<option value="0"><?php echo $text_no; ?></option>
+									<?php } else { ?>
+										<option value="1"><?php echo $text_yes; ?></option>
+										<option value="0" selected="selected"><?php echo $text_no; ?></option>
+									<?php } ?>
+								</select></td>
+							</tr>
+						</table>
 						<h2><?php echo $entry_attribute; ?></h2>
 						<table class="form">
 							<tr>
@@ -1197,9 +1213,15 @@ table.form > tbody > tr > td:first-child {
 	width: 200px;
 }
 table.form > tbody > tr > td {
-	padding: 10px;
+	padding: 10px 5px;
 	color: #000000;
 	border-bottom: 1px dotted #CCCCCC;
+}
+table.form > tbody > tr > td span[data-toggle="tooltip"]:after {
+    font-family: FontAwesome;
+    color: #1E91CF;
+    content: "\f059";
+    margin-left: 4px;
 }
 .scrollbox {
 	border: 1px solid #CCCCCC;
@@ -1218,8 +1240,8 @@ nav.nav-tabs > li > a{
 .nav-tabs {
   border-bottom: 0px solid #dddddd;
 }
-
 </style>
+
 <script type="text/javascript" src="view/javascript/tabs.js"></script>
 <script type="text/javascript"><!--
 $('.vtabs a').tabs();

@@ -180,6 +180,7 @@ class OneCGateway extends Controller {
 	$result['model']	 				= isset($setting['exchange_1c_model']) ? (int)$setting['exchange_1c_model'] : 1;
 	$result['subtract'] 					= isset($setting['exchange_1c_subtract']) ? (int)$setting['exchange_1c_subtract'] : 1;
 	$result['shipping'] 					= isset($setting['exchange_1c_shipping']) ? (int)$setting['exchange_1c_shipping'] : 1;
+	$result['only_1c_options'] 				= isset($setting['exchange_1c_only_1c_options']) ? (int)$setting['exchange_1c_only_1c_options'] : 1;
 	$result['attribute_group'] 				= isset($setting['exchange_1c_attribute_group']) ? (int)$setting['exchange_1c_attribute_group'] : 0;
 	$result['update_date_available'] 			= isset($setting['exchange_1c_update_date_available']) ? (int)$setting['exchange_1c_update_date_available'] : 0;
 	$result['status_unavailable'] 				= isset($setting['exchange_1c_status_unavailable']) ? (int)$setting['exchange_1c_status_unavailable'] : 0;
@@ -615,7 +616,7 @@ class OneCGateway extends Controller {
 			'product_image' 	=> isset($args['product_image']) ? $this->_productImages((array)$args['product_image']) : array(),
 			'keyword' 		=> $keyword,
 			'quantity' 		=> $args['quantity'],
-			'price' 				=> $args['price'],
+			'price' 		=> $args['price'],
 			'main_category_id' 	=> $args['main_category_id'],
 			'model' 		=> $args['model'] ? $args['model'] : ($this->setting['model'] == 1 ? $args['name'] : $args['scu']),
 			'product_description' 	=> $descriptions,
@@ -662,7 +663,7 @@ class OneCGateway extends Controller {
 			if ($product_id) {
 				$this->log("Вызов model_catalog_product->editProduct()", '_saveProduct():');
 
-				if (1) {
+				if ($this->setting['only_1c_options']) {
 					$non_1c_product_options = $this->_getNon1cProductOptions($product_id, $option_exchange);
 				}
 
@@ -687,7 +688,9 @@ class OneCGateway extends Controller {
 
 			$this->_saveProductOptions($product_id, (array)$args['options'], $option_exchange);
 
-			$this->_saveNon1cProductOptions($product_id, (array)$non_1c_product_options);
+			if ($this->setting['only_1c_options']) {
+				$this->_saveNon1cProductOptions($product_id, (array)$non_1c_product_options);
+			}
 		}
 
 		return $product_id;
@@ -901,7 +904,7 @@ class OneCGateway extends Controller {
 	/**
 	 * @param integer $product_id
 	 * @param mixed $data
-	 * @return mixed
+	 * @return null
 	 */
 	private function _saveNon1cProductOptions($product_id, $data) {
 		if (count($data) > 0) {

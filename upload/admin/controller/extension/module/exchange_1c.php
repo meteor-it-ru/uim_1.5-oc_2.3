@@ -115,6 +115,10 @@ class ControllerExtensionModuleExchange1c extends Controller {
 		$data['entry_transliterate_simple'] = $this->language->get('entry_transliterate_simple');
 		$data['entry_transliterate_url'] = $this->language->get('entry_transliterate_url');
 
+		$data['entry_options'] = $this->language->get('entry_options');
+		$data['entry_only_1c_options'] = $this->language->get('entry_only_1c_options');
+		$data['help_only_1c_options'] = $this->language->get('help_only_1c_options');
+
 		$data['entry_attribute'] = $this->language->get('entry_attribute');
 		$data['entry_attribute_group'] = $this->language->get('entry_attribute_group');
 
