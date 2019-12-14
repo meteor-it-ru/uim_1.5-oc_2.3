@@ -663,7 +663,7 @@ class OneCGateway extends Controller {
 			if ($product_id) {
 				$this->log("Вызов model_catalog_product->editProduct()", '_saveProduct():');
 
-				if ($this->setting['only_1c_options']) {
+				if (!$this->setting['only_1c_options']) {
 					$non_1c_product_options = $this->_getNon1cProductOptions($product_id, $option_exchange);
 				}
 
@@ -688,7 +688,7 @@ class OneCGateway extends Controller {
 
 			$this->_saveProductOptions($product_id, (array)$args['options'], $option_exchange);
 
-			if ($this->setting['only_1c_options']) {
+			if (!$this->setting['only_1c_options']) {
 				$this->_saveNon1cProductOptions($product_id, (array)$non_1c_product_options);
 			}
 		}
@@ -1341,8 +1341,18 @@ class OneCGateway extends Controller {
 					);
 
 					$this->cache->delete("product");
+
 					$option_exchange = $this->model_extension_module_exchange_1c->getProductOptionValueExchange($product['id']);
+
+					if (!$this->setting['only_1c_options']) {
+						$non_1c_product_options = $this->_getNon1cProductOptions($product['id'], $option_exchange);
+					}
+
 					$this->_saveProductOptions($product['id'], (array)$product['options'], $option_exchange);
+
+					if (!$this->setting['only_1c_options']) {
+						$this->_saveNon1cProductOptions($product['id'], (array)$non_1c_product_options);
+					}
 				}
 			}
 		}

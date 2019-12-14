@@ -11,10 +11,10 @@
 		</ul>
 		<div class="pull-right">
 			<?php if (!$installed) { ?>
-				<a onclick="location = '<?php echo $install; ?>';" class="btn btn-success" title="<?php echo $text_install; ?>"><i class="fa fa-plus-circle"></i></a>
+				<!--<a onclick="location = '<?php echo $install; ?>';" class="btn btn-success" title="<?php echo $text_install; ?>"><i class="fa fa-plus-circle"></i></a>-->
 			<?php } ?>
 			<?php if ($installed) { ?>
-				<a onclick="location = '<?php echo $uninstall; ?>';" class="btn btn-danger" title="<?php echo $text_uninstall; ?>"><i class="fa fa-minus-circle"></i></a>
+				<!--<a onclick="location = '<?php echo $uninstall; ?>';" class="btn btn-danger" title="<?php echo $text_uninstall; ?>"><i class="fa fa-minus-circle"></i></a>-->
 			<?php } ?>
 			<a onclick="$('#form').submit();" class="btn btn-primary" title="<?php echo $button_save; ?>" ><i class="fa fa-save"></i></a>
 			<a onclick="location = '<?php echo $cancel; ?>';" class="btn btn-default" title="<?php echo $button_cancel; ?>"><i class="fa fa-reply"></i></a>
