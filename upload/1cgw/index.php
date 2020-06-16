@@ -1109,8 +1109,8 @@ class OneCGateway extends Controller {
 
 			// (4) related option value
 			if ($related && $option_link !== '') {
-				$master_option_value = isset($result[(int)$option_link]) ? $result[(int)$option_link]['option_value_id'] : 0;
-				$db->query("update " . DB_PREFIX . "product_option_value set `master_option_value` = $master_option_value WHERE `product_option_value_id` = $product_option_value_id;");
+				$master_option_value = isset($result[(int)$option_link]) ? $result[(int)$option_link]['product_option_value_id'] : 0;
+				$db->query("UPDATE " . DB_PREFIX . "product_option_value SET `master_option_value` = $master_option_value WHERE `product_option_value_id` = $product_option_value_id;");
 			}
 
 			// (5) save exchange data
