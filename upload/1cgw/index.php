@@ -769,21 +769,21 @@ class OneCGateway extends Controller {
 		$rg = new Registry();
 		$rg->set('db', $db);
 
-		$find = $db->query("select attribute_group_id from " . DB_PREFIX . "attribute_group_description where name='$name' limit 0,1");
+		$find = $db->query("SELECT attribute_group_id FROM " . DB_PREFIX . "attribute_group_description WHERE name='$name' limit 0,1");
 		$name1 = $this->_transliterateString($name, false);
 
 		if($find->num_rows == 0) {
-			$find1 = $db->query("select attribute_group_id from " . DB_PREFIX . "attribute_group_description where name='$name1' limit 0,1");
+			$find1 = $db->query("SELECT attribute_group_id FROM " . DB_PREFIX . "attribute_group_description WHERE name='$name1' limit 0,1");
 			if ($find1->num_rows == 0){
-				$db->query("insert into " . DB_PREFIX . "attribute_group (sort_order) values ($sort_order);");
+				$db->query("INSERT INTO " . DB_PREFIX . "attribute_group (sort_order) VALUES ($sort_order);");
 				$attribute_group_id = $db->getLastId();
 
 				foreach ($languages as $k => $v) {
 					if ($v["language_id"] == $lang) {
-						$db->query("insert into " . DB_PREFIX . "attribute_group_description values ($attribute_group_id, $lang, '$name');");
+						$db->query("INSERT INTO " . DB_PREFIX . "attribute_group_description VALUES ($attribute_group_id, $lang, '$name');");
 					} else {
 						$name_lang = $this->setting['translit_name'] ? $this->_transliterateString($name, false) : '';
-						$db->query("insert into " . DB_PREFIX . "attribute_group_description values ($attribute_group_id, " . $v["language_id"] . ", '$name_lang');");
+						$db->query("INSERT INTO " . DB_PREFIX . "attribute_group_description VALUES ($attribute_group_id, " . $v["language_id"] . ", '$name_lang');");
 					}
 				}
 				return $attribute_group_id;
@@ -826,26 +826,26 @@ class OneCGateway extends Controller {
 			$rg = new Registry();
 			$rg->set('db', $db);
 
-			$find = $db->query("select attribute_id from " . DB_PREFIX ."attribute_description where name='$attribute_name' and language_id=$lang limit 0,1");
+			$find = $db->query("SELECT attribute_id FROM " . DB_PREFIX ."attribute_description WHERE name='$attribute_name' AND language_id=$lang limit 0,1");
 
 			if ($find->num_rows == 0) {
 				$attr_name = $this->_transliterateString($attribute_name, false);
 
-				$find1 = $db->query("select attribute_id from " . DB_PREFIX ."attribute_description where name='$attr_name' and language_id= " . (int)$this->config->get('config_language_id') . " limit 0,1");
+				$find1 = $db->query("SELECT attribute_id FROM " . DB_PREFIX ."attribute_description WHERE name='$attr_name' AND language_id= " . (int)$this->config->get('config_language_id') . " limit 0,1");
 
 				if ($find1->num_rows == 0) {
 
 					$attribute_group_id = $this->_addGroupAttribute();
 
-					$db->query("insert into " . DB_PREFIX . "attribute (attribute_group_id, sort_order) values ($attribute_group_id, $sort_order);");
+					$db->query("INSERT INTO " . DB_PREFIX . "attribute (attribute_group_id, sort_order) VALUES ($attribute_group_id, $sort_order);");
 					$attribute_id = $db->getLastId();
 
 					foreach ($languages as $k => $v) {
 						if ($v["language_id"] == $lang) {
-							$db->query("insert into " . DB_PREFIX . "attribute_description values ($attribute_id, $lang, '$attribute_name');");
+							$db->query("INSERT INTO " . DB_PREFIX . "attribute_description VALUES ($attribute_id, $lang, '$attribute_name');");
 						} else {
 							$attribute_name_lang = $this->setting['translit_name'] ? $this->_transliterateString($attribute_name, false) : '';
-							$db->query("insert into " . DB_PREFIX . "attribute_description values ($attribute_id, " . $v["language_id"] . ", '$attribute_name_lang');");
+							$db->query("INSERT INTO " . DB_PREFIX . "attribute_description VALUES ($attribute_id, " . $v["language_id"] . ", '$attribute_name_lang');");
 						}
 					}
 				} else {
@@ -855,15 +855,15 @@ class OneCGateway extends Controller {
 					$attribute_id = $find->row["attribute_id"];
 			}
 
-			$db->query("delete from " . DB_PREFIX . "product_attribute where product_id=$product_id and attribute_id=$attribute_id");
+			$db->query("delete FROM " . DB_PREFIX . "product_attribute WHERE product_id=$product_id AND attribute_id=$attribute_id");
 
 			foreach ($languages as $k => $v) {
 				if ($v["language_id"] == $lang) {
-					$db->query("insert into " . DB_PREFIX . "product_attribute values ($product_id, $attribute_id, $lang, '$attribute_value');");
+					$db->query("INSERT INTO " . DB_PREFIX . "product_attribute VALUES ($product_id, $attribute_id, $lang, '$attribute_value');");
 				} else {
 					$attribute_value_lang = (isset($attribute_data['product_attribute_description'][$v["language_id"]]['text']) && $this->setting['save_other_lang']) ? $attribute_data['product_attribute_description'][$v["language_id"]]['text'] :
 						($this->setting['translit_name'] ? $this->_transliterateString($attribute_value, false) : '');
-					$db->query("insert into " . DB_PREFIX . "product_attribute values ($product_id, $attribute_id, " . $v["language_id"] . ", '$attribute_value_lang');");
+					$db->query("INSERT INTO " . DB_PREFIX . "product_attribute VALUES ($product_id, $attribute_id, " . $v["language_id"] . ", '$attribute_value_lang');");
 				}
 			}
 		}
@@ -1009,23 +1009,23 @@ class OneCGateway extends Controller {
 
 			// (1) option and product option
 			if (!isset($option_exchange[$id_1c]) && !$find_result) {
-				$find = $db->query("select option_id from " . DB_PREFIX . "option_description where name = '$option_name'");
+				$find = $db->query("SELECT option_id FROM " . DB_PREFIX . "option_description WHERE name = '$option_name'");
 
 				if ($find->num_rows == 0) {
 					$opt_name = $this->_transliterateString($option_name, false);
-					$find1 = $db->query("select option_id from " . DB_PREFIX . "option_description where name = '$opt_name'");
+					$find1 = $db->query("SELECT option_id FROM " . DB_PREFIX . "option_description WHERE name = '$opt_name'");
 
 					if ($find1->num_rows == 0) {
-						$db->query("insert into `" . DB_PREFIX . "option` (`type`, `sort_order`) values ('$type', $option_order);");
+						$db->query("INSERT INTO `" . DB_PREFIX . "option` (`type`, `sort_order`) VALUES ('$type', $option_order);");
 
 						$option_id = $db->getLastId();
 
 						foreach ($languages as $k => $v) {
 							if ($v["language_id"] == $language_id) {
-								$db->query("insert into " . DB_PREFIX . "option_description (`option_id`, `language_id`, `name`) values ($option_id, $language_id, '$option_name');");
+								$db->query("INSERT INTO " . DB_PREFIX . "option_description (`option_id`, `language_id`, `name`) VALUES ($option_id, $language_id, '$option_name');");
 							} else {
 								$option_name_lang = $this->setting['translit_name'] ? $this->_transliterateString($option_name, false) : '';
-								$db->query("insert into " . DB_PREFIX . "option_description (`option_id`, `language_id`, `name`) values ($option_id, " . $v["language_id"] . ", '$option_name_lang');");
+								$db->query("INSERT INTO " . DB_PREFIX . "option_description (`option_id`, `language_id`, `name`) VALUES ($option_id, " . $v["language_id"] . ", '$option_name_lang');");
 							}
 						}
 					} else {
@@ -1035,13 +1035,13 @@ class OneCGateway extends Controller {
 					$option_id = $find->row['option_id'];
 				}
 
-				$db->query("insert into " . DB_PREFIX . "product_option (`product_id`, `option_id`, `value`, `required`) values ($product_id, $option_id, '', $required);");
+				$db->query("INSERT INTO " . DB_PREFIX . "product_option (`product_id`, `option_id`, `value`, `required`) VALUES ($product_id, $option_id, '', $required);");
 				$product_option_id = $db->getLastId();
 			} elseif (!$find_result) {
 				$option_id = $option_exchange[$id_1c]['option_id'];
 				$product_option_id = $option_exchange[$id_1c]['product_option_id'];
 
-				$db->query("insert into " . DB_PREFIX . "product_option (`product_option_id`, `product_id`, `option_id`, `value`, `required`) values ($product_option_id, $product_id, $option_id, '', $required);");
+				$db->query("INSERT INTO " . DB_PREFIX . "product_option (`product_option_id`, `product_id`, `option_id`, `value`, `required`) VALUES ($product_option_id, $product_id, $option_id, '', $required);");
 			} else {
 				$option_id = $find_result['option_id'];
 				$product_option_id = $find_result['product_option_id'];
@@ -1050,7 +1050,7 @@ class OneCGateway extends Controller {
 			// (2) related option
 			if ($related && $option_link !== '') {
 				$master_option = isset($result[(int)$option_link]) ? $result[(int)$option_link]['option_id'] : 0;
-				$db->query("update " . DB_PREFIX . "product_option set `master_option` = $master_option WHERE `product_option_id` = $product_option_id;");
+				$db->query("UPDATE " . DB_PREFIX . "product_option SET `master_option` = $master_option WHERE `product_option_id` = $product_option_id;");
 			}
 
 			$find_result = array();
@@ -1076,45 +1076,45 @@ class OneCGateway extends Controller {
 			$quan = (int)$option_q;
 
 			if (!isset($option_exchange[$id_1c]) && !$find_result) {
-				$find = $db->query("select option_value_id from " . DB_PREFIX . "option_value_description where name = '$option_value' and option_id = $option_id");
+				$find = $db->query("SELECT option_value_id FROM " . DB_PREFIX . "option_value_description WHERE name = '$option_value' AND option_id = $option_id");
 				if ($find->num_rows == 0) {
-					$db->query("insert into " . DB_PREFIX . "option_value (`option_id`, `sort_order`) values ($option_id, $sort_order);");
+					$db->query("INSERT INTO " . DB_PREFIX . "option_value (`option_id`, `sort_order`) VALUES ($option_id, $sort_order);");
 					$option_value_id = $db->getLastId();
 
 					foreach ($languages as $k => $v) {
 						if ($v["language_id"] == $language_id) {
-							$db->query("insert into " . DB_PREFIX . "option_value_description (`option_value_id`, `language_id`, `option_id`, `name`) values ($option_value_id, $language_id, $option_id, '$option_value');");
+							$db->query("INSERT INTO " . DB_PREFIX . "option_value_description (`option_value_id`, `language_id`, `option_id`, `name`) VALUES ($option_value_id, $language_id, $option_id, '$option_value');");
 						} else {
 							$option_value_lang = $this->setting['translit_name'] ? $this->_transliterateString($option_value, false) : '';
-							$db->query("insert into " . DB_PREFIX . "option_value_description (`option_value_id`, `language_id`, `option_id`, `name`) values ($option_value_id, " . $v["language_id"] . ", $option_id, '$option_value_lang');");
+							$db->query("INSERT INTO " . DB_PREFIX . "option_value_description (`option_value_id`, `language_id`, `option_id`, `name`) VALUES ($option_value_id, " . $v["language_id"] . ", $option_id, '$option_value_lang');");
 						}
 					}
 				} else {
 					$option_value_id = $find->row['option_value_id'];
 				}
 
-				$db->query("insert into " . DB_PREFIX . "product_option_value (`product_option_id`, `product_id`, `option_id`, `option_value_id`, `quantity`, `subtract`, `price`, `price_prefix`, `points`, `points_prefix`, `weight`, `weight_prefix`)
-						values ($product_option_id, $product_id, $option_id, $option_value_id, $quan, 1, $pr, '$sgn', 0, '+', $wght, '$sgn_wght');");
+				$db->query("INSERT INTO " . DB_PREFIX . "product_option_value (`product_option_id`, `product_id`, `option_id`, `option_value_id`, `quantity`, `subtract`, `price`, `price_prefix`, `points`, `points_prefix`, `weight`, `weight_prefix`)
+						VALUES ($product_option_id, $product_id, $option_id, $option_value_id, $quan, 1, $pr, '$sgn', 0, '+', $wght, '$sgn_wght');");
 				$product_option_value_id = $db->getLastId();
 			} elseif (!$find_result) {
 				$option_value_id = $option_exchange[$id_1c]['option_value_id'];
 				$product_option_value_id = $option_exchange[$id_1c]['product_option_value_id'];
 
-				$db->query("insert into " . DB_PREFIX . "product_option_value (`product_option_value_id`, `product_option_id`, `product_id`, `option_id`, `option_value_id`, `quantity`, `subtract`, `price`, `price_prefix`, `points`, `points_prefix`, `weight`, `weight_prefix`)
-						values ($product_option_value_id, $product_option_id, $product_id, $option_id, $option_value_id, $quan, 1, $pr, '$sgn', 0, '+', $wght, '$sgn_wght');");
+				$db->query("INSERT INTO " . DB_PREFIX . "product_option_value (`product_option_value_id`, `product_option_id`, `product_id`, `option_id`, `option_value_id`, `quantity`, `subtract`, `price`, `price_prefix`, `points`, `points_prefix`, `weight`, `weight_prefix`)
+						VALUES ($product_option_value_id, $product_option_id, $product_id, $option_id, $option_value_id, $quan, 1, $pr, '$sgn', 0, '+', $wght, '$sgn_wght');");
 			} else {
 				$option_value_id = $find_result['option_value_id'];
 
 				// this option_value already exists, we will add it only if it is value of related option
 				if ($related && $option_link !== '') {
 					if (!isset($option_exchange[$id_1c])) {
-						$db->query("insert into " . DB_PREFIX . "product_option_value (`product_option_id`, `product_id`, `option_id`, `option_value_id`, `quantity`, `subtract`, `price`, `price_prefix`, `points`, `points_prefix`, `weight`, `weight_prefix`)
-							values ($product_option_id, $product_id, $option_id, $option_value_id, $quan, 1, $pr, '$sgn', 0, '+', $wght, '$sgn_wght');");
+						$db->query("INSERT INTO " . DB_PREFIX . "product_option_value (`product_option_id`, `product_id`, `option_id`, `option_value_id`, `quantity`, `subtract`, `price`, `price_prefix`, `points`, `points_prefix`, `weight`, `weight_prefix`)
+							VALUES ($product_option_id, $product_id, $option_id, $option_value_id, $quan, 1, $pr, '$sgn', 0, '+', $wght, '$sgn_wght');");
 						$product_option_value_id = $db->getLastId();
 					} else {
 						$product_option_value_id = $option_exchange[$id_1c]['product_option_value_id'];
-						$db->query("insert into " . DB_PREFIX . "product_option_value (`product_option_value_id`, `product_option_id`, `product_id`, `option_id`, `option_value_id`, `quantity`, `subtract`, `price`, `price_prefix`, `points`, `points_prefix`, `weight`, `weight_prefix`)
-							values ($product_option_value_id, $product_option_id, $product_id, $option_id, $option_value_id, $quan, 1, $pr, '$sgn', 0, '+', $wght, '$sgn_wght');");
+						$db->query("INSERT INTO " . DB_PREFIX . "product_option_value (`product_option_value_id`, `product_option_id`, `product_id`, `option_id`, `option_value_id`, `quantity`, `subtract`, `price`, `price_prefix`, `points`, `points_prefix`, `weight`, `weight_prefix`)
+							VALUES ($product_option_value_id, $product_option_id, $product_id, $option_id, $option_value_id, $quan, 1, $pr, '$sgn', 0, '+', $wght, '$sgn_wght');");
 					}
 				} else {
 					$product_option_value_id = $find_result['product_option_value_id'];
@@ -1352,11 +1352,11 @@ class OneCGateway extends Controller {
 				if ($product) {
 					$product = (array)$product;
 
-					$db->query("update " . DB_PREFIX . "product
-						set quantity = '" . (int)$product['quantity'] . "',
+					$db->query("UPDATE " . DB_PREFIX . "product
+						SET quantity = '" . (int)$product['quantity'] . "',
 						price = '" . (float)$product['price'] . "',
 						weight = '" . (float)$product['weight'] . "'
-						where product_id = " . $product['id'] . ";"
+						WHERE product_id = " . $product['id'] . ";"
 					);
 
 					$this->cache->delete("product");
@@ -1403,7 +1403,7 @@ class OneCGateway extends Controller {
 			foreach ($customers as $customer) {
 				if ($customer) {
 					$customer = (array)$customer;
-					$db->query("update " . DB_PREFIX . "customer set is_new = " . (int)$customer['is_new'] . " where customer_id = " . (int)$customer['id'] . ";");
+					$db->query("UPDATE " . DB_PREFIX . "customer SET is_new = " . (int)$customer['is_new'] . " WHERE customer_id = " . (int)$customer['id'] . ";");
 				}
 			}
 		}
@@ -1434,7 +1434,7 @@ class OneCGateway extends Controller {
 		if ($orders) {
 			foreach ($orders as $order) {
 				if ($order) {
-					$db->query("update `" . DB_PREFIX . "order` set is_new = 0 where order_id = " . (int)$order . ";");
+					$db->query("UPDATE `" . DB_PREFIX . "order` SET is_new = 0 WHERE order_id = " . (int)$order . ";");
 				}
 			}
 		}
@@ -1459,7 +1459,7 @@ class OneCGateway extends Controller {
 		$buf = array();
 		$rg->set('db', $db);
 
-		$query = $db->query("select order_status_id as status_id, name from `" . DB_PREFIX . "order_status` where language_id = $lang;");
+		$query = $db->query("SELECT order_status_id AS status_id, name FROM `" . DB_PREFIX . "order_status` WHERE language_id = $lang;");
 
 		$this->log($query->rows, 'getOrderStatuses(): $query->rows', "get_order_statuses_data.log");
 
@@ -1490,7 +1490,7 @@ class OneCGateway extends Controller {
 			foreach ($orders as $order) {
 				if ($order) {
 					$order = (array)$order;
-					$db->query("update `" . DB_PREFIX . "order` set order_status_id = " . (int)$order['status_id'] . " where order_id = " . (int)$order['order_id'] . ";");
+					$db->query("UPDATE `" . DB_PREFIX . "order` SET order_status_id = " . (int)$order['status_id'] . " WHERE order_id = " . (int)$order['order_id'] . ";");
 				}
 			}
 		}
@@ -1645,7 +1645,7 @@ class OneCGateway extends Controller {
 		$buf = array();
 		$rg->set('db', $db);
 
-		$query = $db->query("select * from `" . DB_PREFIX . "extension` where type = 'shipping';");
+		$query = $db->query("SELECT * FROM `" . DB_PREFIX . "extension` WHERE type = 'shipping';");
 
 		$result = array();
 		foreach ($query->rows as $shipping) {
@@ -1677,7 +1677,7 @@ class OneCGateway extends Controller {
 		$buf = array();
 		$rg->set('db', $db);
 
-		$query = $db->query("select * from `" . DB_PREFIX . "extension` where type = 'payment';");
+		$query = $db->query("SELECT * FROM `" . DB_PREFIX . "extension` WHERE type = 'payment';");
 
 		$result = array();
 
@@ -1807,7 +1807,7 @@ class OneCGateway extends Controller {
 		$buf = array();
 		$rg->set('db', $db);
 
-		$query = $db->query("select t1.customer_id, t1.firstname, t1.lastname, t1.email, t1.telephone, t1.status, t2.company, t2.address_1, t2.address_2, t2.city, t2.postcode from " . DB_PREFIX . "customer t1 left join " . DB_PREFIX . "address t2 using( address_id ) where is_new > 0;");
+		$query = $db->query("SELECT t1.customer_id, t1.firstname, t1.lastname, t1.email, t1.telephone, t1.status, t2.company, t2.address_1, t2.address_2, t2.city, t2.postcode FROM " . DB_PREFIX . "customer t1 LEFT JOIN " . DB_PREFIX . "address t2 using( address_id ) WHERE is_new > 0;");
 
 		$this->log($query->rows, 'getNewCustomer(): $query->rows', "get_new_customer_data.log");
 
@@ -1830,20 +1830,20 @@ class OneCGateway extends Controller {
 		$rg->set('db', $db);
 
 		$query = $db->query("
-			select o.*, op.*, o.total as order_total, ot.value as shipping_price, ot2.value as coupon_price from `" . DB_PREFIX . "order` o
-			left join `" . DB_PREFIX . "order_product` op on o.order_id = op.order_id
-			left join `" . DB_PREFIX . "order_total` ot on o.order_id = ot.order_id and ot.code = 'shipping'
-			left join `" . DB_PREFIX . "order_total` ot2 on o.order_id = ot2.order_id and ot2.code = 'coupon'
-			where o.is_new = 1 and o.order_status_id > 0;
+			SELECT o.*, op.*, o.total AS order_total, ot.value AS shipping_price, ot2.value AS coupon_price FROM `" . DB_PREFIX . "order` o
+			LEFT JOIN `" . DB_PREFIX . "order_product` op ON o.order_id = op.order_id
+			LEFT JOIN `" . DB_PREFIX . "order_total` ot ON o.order_id = ot.order_id AND ot.code = 'shipping'
+			LEFT JOIN `" . DB_PREFIX . "order_total` ot2 ON o.order_id = ot2.order_id AND ot2.code = 'coupon'
+			WHERE o.is_new = 1 AND o.order_status_id > 0;
 		");
 
 		$result = $query->rows;
 		foreach ($result as $k =>$v) {
-			$options_query = $db->query("select oo.*, pove.exchange_id from " . DB_PREFIX . "order_option oo
-							left join " . DB_PREFIX . "product_option_value_exchange pove
-							on oo.product_option_id = pove.product_option_id
-							and oo.product_option_value_id = pove.product_option_value_id
-							where oo.order_id = '" . (int)$v['order_id'] . "' and oo.order_product_id = '" . (int)$v['order_product_id'] . "'
+			$options_query = $db->query("SELECT oo.*, pove.exchange_id FROM " . DB_PREFIX . "order_option oo
+							LEFT JOIN " . DB_PREFIX . "product_option_value_exchange pove
+							ON oo.product_option_id = pove.product_option_id
+							AND oo.product_option_value_id = pove.product_option_value_id
+							WHERE oo.order_id = '" . (int)$v['order_id'] . "' AND oo.order_product_id = '" . (int)$v['order_product_id'] . "'
 						");
 
 			$options = array();
