@@ -40,7 +40,7 @@ class OneCGateway extends Controller {
 	 */
 	private function _loadSetting() {
 
-  	$this->load->model('setting/setting');
+	$this->load->model('setting/setting');
 	$setting = $this->model_setting_setting->getSetting('exchange_1c', 0);
 	$result = array();
 
@@ -269,14 +269,17 @@ class OneCGateway extends Controller {
 		$this->load->model("localisation/language");
 
 		$data = $this->model_localisation_language->getLanguages();
+
 		if (!$code) {
 			return $data;
 		}
+
 		foreach ($data as $lang) {
 			if ($lang["code"] == $code) {
 				return $lang["language_id"];
 			}
 		}
+
 		return 0;
 	}
 
@@ -550,6 +553,7 @@ class OneCGateway extends Controller {
 		}
 
 		$descriptions = array();
+
 		foreach ($languages as $k => $v) {
 			if ($v["language_id"] == $lang) {
 				$descriptions[$v["language_id"]] = array(
@@ -577,6 +581,7 @@ class OneCGateway extends Controller {
 		}
 
 		$manufacturer_id = 0;
+
 		if ($args['manufacturer']) {
 			$manufacturer_info = $this->model_extension_module_exchange_1c->getManufacturerByName((string)$args['manufacturer']);
 
@@ -703,8 +708,10 @@ class OneCGateway extends Controller {
 	private function _productImages($images) {
 		$buffer = array();
 		$img_dir = $this->image_dir . '/product/';
+
 		if (isset($images['image']) && is_array($images['image'])) {
 			$last = array_pop($images['image']);
+
 			foreach($images['image'] as $k => $v) {
 				if ($images['dir_image'][$k]) {
 					if ($v) {
@@ -736,12 +743,14 @@ class OneCGateway extends Controller {
 
 		if ($fp = fopen(DIR_IMAGE . $name, "wb")) {
 			$wlen = 0;
+
 			for ($written = 0; $written < strlen(base64_decode($data)); $written += $wlen ) {
 				$wlen = fwrite($fp, substr(base64_decode($data), $written));
 				if ($wlen === false) {
 					return 0;
 				}
 			}
+
 			fclose($fp);
 			chmod(DIR_IMAGE . $name, 0644);
 		}
@@ -800,6 +809,7 @@ class OneCGateway extends Controller {
 
 		foreach ($attribute_names as $k => $attribute_name) {
 			$attribute_data = array();
+
 			foreach ($product_attributes as $attr) {
 				if ($attr['name'] == $attribute_name) {
 					$attribute_data = $attr;
@@ -817,13 +827,13 @@ class OneCGateway extends Controller {
 			$rg->set('db', $db);
 
 			$find = $db->query("select attribute_id from " . DB_PREFIX ."attribute_description where name='$attribute_name' and language_id=$lang limit 0,1");
-			if ($find->num_rows == 0) {
 
+			if ($find->num_rows == 0) {
 				$attr_name = $this->_transliterateString($attribute_name, false);
 
 				$find1 = $db->query("select attribute_id from " . DB_PREFIX ."attribute_description where name='$attr_name' and language_id= " . (int)$this->config->get('config_language_id') . " limit 0,1");
 
-				if ($find1->num_rows == 0){
+				if ($find1->num_rows == 0) {
 
 					$attribute_group_id = $this->_addGroupAttribute();
 
@@ -846,6 +856,7 @@ class OneCGateway extends Controller {
 			}
 
 			$db->query("delete from " . DB_PREFIX . "product_attribute where product_id=$product_id and attribute_id=$attribute_id");
+
 			foreach ($languages as $k => $v) {
 				if ($v["language_id"] == $lang) {
 					$db->query("insert into " . DB_PREFIX . "product_attribute values ($product_id, $attribute_id, $lang, '$attribute_value');");
@@ -937,7 +948,6 @@ class OneCGateway extends Controller {
 		$this->log($args, "args: ", "save_product_options_data.log");
 		$this->log($option_exchange, "option_exchange: ", "save_product_options_data.log");
 
-
 		$db = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
 		$rg = new Registry();
 		$rg->set('db', $db);
@@ -983,11 +993,13 @@ class OneCGateway extends Controller {
 			$id_1c = $ids_1c[$key];
 
 			$trimmed_option_value = trim($option_value);
+
 			if (empty($trimmed_option_value)) {
 				continue;
 			}
 
 			$find_result = array();
+
 			foreach ($result as $res) {
 				if ($res['option_name'] == $option_name) {
 					$find_result = $res;
@@ -998,14 +1010,16 @@ class OneCGateway extends Controller {
 			// (1) option and product option
 			if (!isset($option_exchange[$id_1c]) && !$find_result) {
 				$find = $db->query("select option_id from " . DB_PREFIX . "option_description where name = '$option_name'");
+
 				if ($find->num_rows == 0) {
-
 					$opt_name = $this->_transliterateString($option_name, false);
-
 					$find1 = $db->query("select option_id from " . DB_PREFIX . "option_description where name = '$opt_name'");
+
 					if ($find1->num_rows == 0) {
 						$db->query("insert into `" . DB_PREFIX . "option` (`type`, `sort_order`) values ('$type', $option_order);");
+
 						$option_id = $db->getLastId();
+
 						foreach ($languages as $k => $v) {
 							if ($v["language_id"] == $language_id) {
 								$db->query("insert into " . DB_PREFIX . "option_description (`option_id`, `language_id`, `name`) values ($option_id, $language_id, '$option_name');");
@@ -1027,8 +1041,7 @@ class OneCGateway extends Controller {
 				$option_id = $option_exchange[$id_1c]['option_id'];
 				$product_option_id = $option_exchange[$id_1c]['product_option_id'];
 
-				$db->query("insert into " . DB_PREFIX . "product_option (`product_option_id`, `product_id`, `option_id`, `value`, `required`)
-					values ($product_option_id, $product_id, $option_id, '', $required);");
+				$db->query("insert into " . DB_PREFIX . "product_option (`product_option_id`, `product_id`, `option_id`, `value`, `required`) values ($product_option_id, $product_id, $option_id, '', $required);");
 			} else {
 				$option_id = $find_result['option_id'];
 				$product_option_id = $find_result['product_option_id'];
@@ -1041,6 +1054,7 @@ class OneCGateway extends Controller {
 			}
 
 			$find_result = array();
+
 			foreach ($result as $res) {
 				if ($res['option_name'] == $option_name && $res['option_value'] == $option_value) {
 					$find_result = $res;
@@ -1139,6 +1153,7 @@ class OneCGateway extends Controller {
 	 */
 	private function _productCategories($categories) {
 		$result = array();
+
 		if (isset($categories['id']) && is_array($categories['id'])) {
 			$last = array_pop($categories['id']);
 			$result = $categories['id'];
@@ -1155,10 +1170,12 @@ class OneCGateway extends Controller {
 	 */
 	private function _relatedProducts($product_related) {
 		$result = array();
+
 		if (isset($product_related['related']) && is_array($product_related['related'])) {
 			$last = array_pop($product_related['related']);
 			$result = $product_related['related'];
 		}
+
 		return $result;
 	}
 
@@ -1174,10 +1191,9 @@ class OneCGateway extends Controller {
 
 		$parent_categories = array(isset($category_info['name']) ? $category_info['name'] : '');
 		$category = $category_info;
-		if (isset($category['parent_id']))
-		{
-			while ($category['parent_id'] > 0)
-			{
+
+		if (isset($category['parent_id'])) {
+			while ($category['parent_id'] > 0) {
 				$category_description = $this->model_catalog_category->getCategoryDescriptions($category['parent_id']);
 				$category = array_merge($category_description[$this->_getLanguageId($this->language_default)], $this->model_catalog_category->getCategory($category['parent_id']));
 
@@ -1197,17 +1213,18 @@ class OneCGateway extends Controller {
 
 		$parent_categories = array(isset($category_info['name']) ? $category_info['name'] : '');
 		$category = $category_info;
-		if (isset($category['parent_id']))
-		{
-			while ($category['parent_id'] > 0)
-			{
+
+		if (isset($category['parent_id'])) {
+			while ($category['parent_id'] > 0) {
 				$category_description = $this->model_catalog_category->getCategoryDescriptions($category['parent_id']);
 				$lang1 = $this->_getLanguageId($this->language_default);
+
 				if (!empty($lang1)){
 					$category = array_merge($category_description[$this->_getLanguageId($this->language_default)], $this->model_catalog_category->getCategory($category['parent_id']));
 				} else {
 					$category = array_merge($category_description[(int)$this->config->get('config_language_id')], $this->model_catalog_category->getCategory($category['parent_id']));
 				}
+
 				array_unshift($parent_categories, $category['name']);
 			}
 		}
@@ -1227,7 +1244,7 @@ class OneCGateway extends Controller {
 			$this->log("Signature is not correct", 'sendSeries():');
 			return array('error' => 'Signature is not correct');
 		}
-	/*
+		/*
 		$args = (array)$args;
 		$series = $args['series'];
 
@@ -1329,10 +1346,12 @@ class OneCGateway extends Controller {
 		$args = (array)$args;
 
 		$products = $args['product'];
+
 		if ($products) {
 			foreach ($products as $product) {
 				if ($product) {
 					$product = (array)$product;
+
 					$db->query("update " . DB_PREFIX . "product
 						set quantity = '" . (int)$product['quantity'] . "',
 						price = '" . (float)$product['price'] . "',
@@ -1379,6 +1398,7 @@ class OneCGateway extends Controller {
 
 		$args = (array)$args;
 		$customers = $args['customer'];
+
 		if ($customers) {
 			foreach ($customers as $customer) {
 				if ($customer) {
@@ -1410,6 +1430,7 @@ class OneCGateway extends Controller {
 
 		$args = (array)$args;
 		$orders = $args['id'];
+
 		if ($orders) {
 			foreach ($orders as $order) {
 				if ($order) {
@@ -1464,6 +1485,7 @@ class OneCGateway extends Controller {
 
 		$args = (array)$args;
 		$orders = $args['order'];
+
 		if ($orders) {
 			foreach ($orders as $order) {
 				if ($order) {
@@ -1501,6 +1523,7 @@ class OneCGateway extends Controller {
 
 		$args = (array)$args;
 		$orders = $args['order'];
+
 		if ($orders) {
 			foreach ($orders as $order) {
 				if ($order) {
@@ -1526,6 +1549,7 @@ class OneCGateway extends Controller {
 								'reward' => 0,
 								'order_option' => array()
 							);
+
 							$product_data_old = $this->model_catalog_product->getProduct($product['product_id']);
 							$product_data_old = array_merge($product_data_old, $this->model_catalog_product->getProductDescriptions($product['product_id']));
 							$product_data['name'] = $product_data_old['name'];
@@ -1534,8 +1558,10 @@ class OneCGateway extends Controller {
 							$comment .= "\r\n" . $product_data['product_id'] . ' ' . $product_data['name'] . ' (' . $product_data['quantity'] . ' шт, цена за единицу ' . $product_data['price'] . ')';
 
 							$product['options'] = (array)$product['options'];
+
 							if (isset($product['options']['option']) && is_array($product['options']['option'])) {
 								$comment .= ', опции: ';
+
 								foreach ($product['options']['option'] as $option_id_1c) {
 									if ($option_id_1c) {
 										$product_option_value = $this->model_extension_module_exchange_1c->getProductOptionValueExchange($product['product_id'], $option_id_1c);
@@ -1579,6 +1605,7 @@ class OneCGateway extends Controller {
 							$data['order_total'][] = $total;
 						}
 					}
+
 					if ($total_total) {
 						$total_total['value'] = $total_total_value;
 						$total_total['text'] = $this->currency->format($total_total_value, $this->config->get('config_currency'));
@@ -1594,6 +1621,7 @@ class OneCGateway extends Controller {
 						'notify' => 0,
 						'comment' => $comment
 					);
+
 					$this->model_sale_order->addOrderHistory($order['order_id'], $history);
 				}
 			}
@@ -1652,9 +1680,11 @@ class OneCGateway extends Controller {
 		$query = $db->query("select * from `" . DB_PREFIX . "extension` where type = 'payment';");
 
 		$result = array();
+
 		foreach ($query->rows as $payment) {
 			$extension = basename($payment['code'], '.php');
 			$this->load->language('payment/' . $extension);
+
 			$result[] = array(
 				'name' => $this->language->get('heading_title'),
 				'code' => $payment['code']
@@ -1676,6 +1706,7 @@ class OneCGateway extends Controller {
 
 		$result = $keyword;
 		$index = 1;
+
 		while (in_array($result, $keywords)) {
 			$result = $keyword . '-' . $index;
 			$index++;
@@ -1750,7 +1781,9 @@ class OneCGateway extends Controller {
 		while ($pos !== false) {
 			$subject = str_replace($search, $replace, $subject);
 			$pos = strpos($subject, $search);
+
 			$i++;
+
 			if ($i > 150) {
 				die('_removeDuplicates() loop error');
 			}
@@ -1814,6 +1847,7 @@ class OneCGateway extends Controller {
 						");
 
 			$options = array();
+
 			foreach ($options_query->rows as $option) {
 				if ($option['type'] != 'file') {
 					//$options[] = $option['exchange_id'];
